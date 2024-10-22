@@ -1,0 +1,68 @@
+/* Clients.css */
+
+/* Table Styles */
+.table-container {
+    margin-top: 16px;
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2); /* Adds shadow effect */
+    border-radius: 8px; /* Adds rounded corners */
+  }
+  
+  .table-container th {
+    background-color: #4CAF50; /* Green background for header */
+    color: white; /* White text color for header */
+    text-align: left;
+  }
+  
+  .table-container td, .table-container th {
+    padding: 8px; /* Adds padding to table cells */
+  }
+  
+  .table-container tr:nth-child(even) {
+    background-color: #f2f2f2; /* Adds alternate row coloring */
+  }
+  
+  .table-container tr:hover {
+    background-color: #ddd; /* Changes color on hover */
+  }
+  
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it's above other elements */
+  }
+  
+  .modal-box {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 600px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    z-index: 1100; /* Ensure the modal is above the overlay */
+  }
+  
+  .modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-around;
+  }
+  
+  .modal-actions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .modal-actions button:hover {
+    background-color: #f0f0f0;
+  }
+  

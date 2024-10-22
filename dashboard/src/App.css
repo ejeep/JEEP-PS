@@ -1,0 +1,15 @@
+/* App.css */
+.app-layout {
+  display: flex; /* Use flexbox to create a side-by-side layout */
+}
+
+.sidebar {
+  width: 250px; /* Fixed width for the sidebar */
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.main-content {
+  flex-grow: 1; /* Take up the remaining space */
+  padding: 20px; /* Add some padding for content */
+  overflow-x: auto; /* Ensure no content is hidden if it's too wide */
+}

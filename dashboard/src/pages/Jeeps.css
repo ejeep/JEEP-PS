@@ -1,0 +1,78 @@
+/* Jeeps.css */
+
+.table-container {
+    margin-top: 16px;
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2); /* Adds shadow effect */
+    border-radius: 8px; /* Adds rounded corners */
+    overflow: hidden; /* Prevents content overflow */
+    max-width: 100%; /* Makes it responsive */
+}
+
+.table-container th {
+    background-color: #4CAF50; /* Green background for header */
+    color: white; /* White text color for header */
+    text-align: left;
+    font-weight: bold; /* Bold font for headers */
+    padding: 12px;
+}
+
+.table-container td, .table-container th {
+    padding: 12px; /* Padding for table cells */
+    font-size: 14px; /* Set font size */
+    border-bottom: 1px solid #ddd; /* Adds a subtle border between rows */
+}
+
+.table-container td {
+    text-align: left; /* Ensures all table data is aligned left */
+}
+
+.table-container tr:hover {
+    background-color: #f5f5f5; /* Adds hover effect for rows */
+}
+
+.modal-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background-color: white;
+    border: none; /* Removes border */
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3); /* More prominent shadow */
+    padding: 24px; /* Increases padding */
+    border-radius: 10px; /* Adds rounded corners */
+}
+
+.modal-box h6 {
+    margin-bottom: 16px; /* Margin below modal header */
+    font-size: 20px; /* Larger font for modal title */
+}
+
+.modal-box button {
+    margin-top: 16px; /* Margin above buttons */
+}
+
+.modal-box .MuiButton-root {
+    min-width: 120px; /* Consistent button width */
+}
+
+.modal-box .MuiButton-containedPrimary {
+    background-color: #4CAF50; /* Consistent primary button color */
+    color: white;
+}
+
+.modal-box .MuiButton-outlined {
+    border-color: #4CAF50; /* Matches outlined button with primary color */
+    color: #4CAF50;
+}
+
+@media screen and (max-width: 600px) {
+    .modal-box {
+        width: 90%; /* Adjust modal width for smaller screens */
+    }
+
+    .table-container th, .table-container td {
+        padding: 8px; /* Decrease padding for mobile */
+        font-size: 12px; /* Smaller font size for mobile */
+    }
+}

@@ -1,0 +1,20 @@
+.topbar {
+    width: calc(100% - 250px); /* Adjust for sidebar */
+    height: 60px;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 250px;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: left 0.3s ease, width 0.3s ease;
+  }
+  
+  .sidebar.collapsed + .topbar {
+    width: calc(100% - 80px); /* Adjust for collapsed sidebar */
+    left: 80px;
+  }
+  

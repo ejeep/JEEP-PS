@@ -1,0 +1,127 @@
+/* Adjusted Sidebar styles with soft borders */
+.sidebar {
+  position: relative;
+  height: 100vh; /* Full viewport height */
+  width: 250px;
+  background-color: #ffffff;
+  transition: width 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  font-family: 'Poppins', sans-serif;
+  overflow-y: auto; /* Enable vertical scrolling */
+  scrollbar-width: thin; /* Optional: thinner scrollbar */
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background-color: #28a745;
+  color: white;
+}
+
+.sidebar-header h2 {
+  font-size: 24px;
+}
+
+.sidebar-header .toggle-icon {
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.sidebar-menu ul,
+.sidebar-footer ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li,
+.sidebar-footer li {
+  display: flex;
+  align-items: center;
+  padding: 15px; /* Standard padding */
+  cursor: pointer;
+  border-radius: 8px; /* Rounded corners */
+  margin: 5px; /* Add space between list items */
+  transition: background-color 0.3s ease-in-out; /* Smooth transition for hover */
+}
+
+.sidebar-menu li a,
+.sidebar-footer li a {
+  text-decoration: none;
+  color: #333;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  width: 100%; /* Ensure link takes up entire li */
+}
+
+.sidebar-menu li:hover,
+.sidebar-footer li:hover {
+  background-color: #c7f9cc; /* Soft green background on hover */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Soft shadow effect on hover */
+}
+
+.sidebar-menu li a span,
+.sidebar-footer li a span {
+  margin-left: 12px;
+}
+
+.sidebar-menu li a svg,
+.sidebar-footer li a svg {
+  font-size: 1.5rem;
+}
+
+.sidebar-footer {
+  margin-bottom: 10px;
+}
+
+/* When the sidebar is collapsed, hide the text for both menu and footer */
+.sidebar.collapsed .sidebar-menu li a span,
+.sidebar.collapsed .sidebar-footer li a span {
+  display: none;
+}
+
+/* Center icons in the collapsed sidebar for both menu and footer */
+.sidebar.collapsed .sidebar-menu li a,
+.sidebar.collapsed .sidebar-footer li a {
+  justify-content: center;
+}
+
+/* Hide the header title when the sidebar is collapsed */
+.sidebar.collapsed .sidebar-header h2 {
+  display: none;
+}
+
+/* Modal overlay to cover the entire screen with proper z-index */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7); /* Less transparency for better visibility */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure the modal is on top of other elements */
+}
+
+/* Modal content styling */
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 320px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  z-index: 1001; /* Keep modal content on top */
+}
