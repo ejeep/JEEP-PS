@@ -1,0 +1,77 @@
+/* Account.css */
+.account-container {
+    font-family: Arial, sans-serif;
+    max-width: 400px;
+    margin: auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    text-align: center;
+  }
+  
+  h1 {
+    font-size: 2.2em;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  h2 {
+    font-size: 1.6em;
+    margin-bottom: 15px;
+    color: #333;
+  }
+  
+  p {
+    font-size: 0.9em;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  span {
+    color: #4caf50;
+    cursor: pointer;
+  }
+  
+  input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+  }
+  
+  input::placeholder {
+    color: #aaa;
+  }
+  
+  .forgot-password {
+    color: #4caf50;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+    cursor: pointer;
+  }
+  
+  .action-btn {
+    background-color: #ffffff;
+    border: 1px solid #4caf50;
+    color: #4caf50;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+  }
+  
+  .action-btn:hover {
+    background-color: #4caf50;
+    color: #ffffff;
+  }
+  
+  .register-section,
+  .login-section {
+    margin-top: 20px;
+  }
+  

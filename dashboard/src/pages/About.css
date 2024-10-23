@@ -1,0 +1,74 @@
+.about-container {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background-color: #f9f9f9; /* Neutral background */
+    border-radius: 8px;
+    border: 1px solid #c7f9cc; /* Light green border */
+  }
+  
+  h1 {
+    font-size: 2.5em;
+    color: #4caf50; /* Green for headings */
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #555; /* Darker neutral text */
+  }
+  
+  h2 {
+    font-size: 1.8em;
+    margin-top: 20px;
+    color: #4caf50; /* Green for subheadings */
+  }
+  
+  ul {
+    list-style-type: disc;
+    padding-left: 20px;
+  }
+  
+  li {
+    margin-bottom: 10px;
+    font-size: 1em;
+    color: #555; /* Neutral text for list items */
+  }
+  
+  .partnerships p {
+    font-weight: bold;
+    color: #4caf50; /* Green for emphasis */
+    font-size: 1.2em;
+  }
+  
+  .share-section {
+    margin-top: 30px;
+    text-align: center;
+  }
+  
+  .share-btn {
+    background-color: #4caf50; /* Green for buttons */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .share-btn:hover {
+    background-color: #388e3c; /* Darker green on hover */
+  }
+  
+  .about-container {
+    background-color: #ffffff; /* White background for cleaner look */
+  }
+  
+  ul {
+    color: #555; /* Neutral color for list */
+  }
+  
