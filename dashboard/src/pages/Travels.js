@@ -1,19 +1,58 @@
 // src/pages/Travel.js
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import axios from "axios";
 import './Travels.css'; // Import the CSS file for additional styling
 
-const northBoundData = [
-  { busNo: 101, destination: "Bayombong", status: "On the Road" },
-  { busNo: 102, destination: "Solano", status: "On the Road" },
-];
-
-const southBoundData = [
-  { busNo: 201, destination: "Kasibu", status: "On the Road" },
-  { busNo: 202, destination: "Quezon", status: "On the Road" },
-];
-
 function Travel() {
+  const [jeeps, setJeeps] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch jeep data from the backend API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const jeepsResponse = await axios.get("http://localhost:3004/jeep-data/jeeps");
+
+        // Set jeeps data with relevant fields (plate number, direction, status)
+        setJeeps(jeepsResponse.data.map((jeep) => ({
+          id: jeep.id,
+          plateNumber: jeep.plateNumber,
+          routeDirection: jeep.routeDirection,
+          status: jeep.status || "Waiting" // Default status to "Waiting" if not set
+        })));
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Failed to load data.");
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Render the jeeps based on their direction (North/South Bound)
+  const renderJeeps = (direction) =>
+    jeeps
+      .filter((jeep) => jeep.routeDirection === direction)
+      .map((jeep, index) => (
+        <TableRow key={jeep.id}>
+          <TableCell>{jeep.plateNumber}</TableCell>
+          <TableCell>{jeep.routeDirection}</TableCell>
+          <TableCell>{jeep.status}</TableCell>
+        </TableRow>
+      ));
+
+  if (loading) {
+    return <Typography variant="h6" align="center">Loading...</Typography>;
+  }
+
+  if (error) {
+    return <Typography variant="h6" align="center" color="error">{error}</Typography>;
+  }
+
   return (
     <Box sx={{ padding: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
@@ -28,19 +67,13 @@ function Travel() {
             <Table>
               <TableHead>
                 <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Bus No.</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Destination</TableCell>
+                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>
+                  <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
                   <TableCell style={{ color: "#fff" }}>Status</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {northBoundData.map((row) => (
-                  <TableRow key={row.busNo}>
-                    <TableCell>{row.busNo}</TableCell>
-                    <TableCell>{row.destination}</TableCell>
-                    <TableCell>{row.status}</TableCell>
-                  </TableRow>
-                ))}
+                {renderJeeps("North Bound")}
               </TableBody>
             </Table>
           </TableContainer>
@@ -53,19 +86,13 @@ function Travel() {
             <Table>
               <TableHead>
                 <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Bus No.</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Destination</TableCell>
+                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>
+                  <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
                   <TableCell style={{ color: "#fff" }}>Status</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {southBoundData.map((row) => (
-                  <TableRow key={row.busNo}>
-                    <TableCell>{row.busNo}</TableCell>
-                    <TableCell>{row.destination}</TableCell>
-                    <TableCell>{row.status}</TableCell>
-                  </TableRow>
-                ))}
+                {renderJeeps("South Bound")}
               </TableBody>
             </Table>
           </TableContainer>
