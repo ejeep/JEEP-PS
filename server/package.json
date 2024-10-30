@@ -12,6 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",
+    "geolib": "^3.3.4",
+    "haversine": "^1.1.1",
     "mongoose-sequence": "^6.0.1"
   }
 }

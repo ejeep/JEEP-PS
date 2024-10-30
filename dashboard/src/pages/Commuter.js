@@ -1,184 +1,141 @@
-import React, { useState } from "react";
-import { Box, Typography, List, ListItem, Drawer, IconButton, Divider } from "@mui/material";
-import MenuIcon from '@mui/icons-material/Menu';
+import React, { useState, useEffect } from "react";
+import { Box, Grid, Typography, Card, Divider, TextField, Button } from "@mui/material";
 import { styled } from "@mui/system";
-import About from './About'; // Importing About component
-import Account from './Account'; // Importing Account component
-import { useNavigate } from 'react-router-dom'; // Importing useNavigate for navigation
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-// Mock data for routes
-const mockRoutes = [
-  { name: "Jeep #1", status: "North Bound" },
-  { name: "Jeep #2", status: "South Bound" }
-];
-
-// Sidebar styling
-const SidebarContainer = styled(Box)(({ theme }) => ({
-  backgroundColor: "#ffffff",
-  padding: theme.spacing(2),
-  height: "100vh",
-  boxShadow: "2px 0 5px rgba(0, 0, 0, 0.1)",
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-between',
-}));
-
-const DrawerContent = styled(Box)(({ theme }) => ({
-  width: 250,
-  padding: theme.spacing(2),
-}));
-
-// Main panel styling
-const PanelContainer = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(3),
-  backgroundColor: "#f8f9fa",
-  overflowY: "auto",
-}));
-
-// Responsive Layout
-const AppContainer = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: { xs: 'column', md: 'row' }, // Stacks on mobile, side-by-side on desktop
-  height: '100vh',
-}));
-
-const MapContainer = styled(Box)({
-  width: '100%',
-  flexGrow: 1,
-  height: { xs: '400px', md: '100%' }, // 100% height on desktop
-  position: 'relative',
+// Ensure to set marker icon correctly
+delete L.Icon.Default.prototype._getIconUrl; // Remove default URL method for marker icons
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'), // High-resolution icon
+  iconUrl: require('leaflet/dist/images/marker-icon.png'), // Regular icon
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'), // Shadow for the icon
 });
 
+// Mock data for jeep statuses
+const mockData = [
+  {
+    plateNumber: "ABX-1234",
+    model: "Star8 Solar Jeepney",
+    route: "Bayombong-Solano",
+    status: "En route",
+    driver: {
+      name: "John Doe",
+      status: "Driving",
+    },
+    direction: "North Bound",
+    location: { lat: 16.493911, lng: 121.112795 } // Sample coordinates
+  },
+  {
+    plateNumber: "CDE-5678",
+    model: "Star8 Solar Jeepney",
+    route: "Aritao-Baguio",
+    status: "En route",
+    driver: {
+      name: "Jane Smith",
+      status: "Driving",
+    },
+    direction: "South Bound",
+    location: { lat: 16.494000, lng: 121.113000 } // Sample coordinates
+  },
+];
+
+// Container for the whole dashboard
+const DashboardContainer = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(4),
+}));
+
+
+// Container for the jeep status section
+const StatusContainer = styled(Box)(({ theme }) => ({
+  backgroundColor: "#ffffff",
+  border: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(2),
+  height: "100%", // Flexible height
+  borderRadius: "12px",
+  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+  overflow: "auto", // Make sure content doesn't overflow
+}));
+
 function Commuter() {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('home'); // 'home', 'about', or 'account'
-  const navigate = useNavigate(); // Using useNavigate for routing
+  const [selectedJeep, setSelectedJeep] = useState(null);
+  const [jeepData, setJeepData] = useState([]);
 
-  // Handlers to switch between views
-  const showHome = () => setCurrentView('home');
-  const showAbout = () => setCurrentView('about');
-  const showAccount = () => setCurrentView('account');
+  // Fetch jeep location data from the backend
+  const fetchLocationData = async () => {
+    try {
+      const response = await fetch('/api/location'); // Adjust this URL as needed
+      const data = await response.json();
+      setJeepData(data); // Assuming data is in the correct format
+    } catch (error) {
+      console.error("Error fetching location data:", error);
+    }
+  };
 
-  // Logout handler
-  const handleLogout = () => {
-    // Add logout logic here, such as clearing user session or authentication tokens
-    navigate('/'); // Redirect to Main.js or the home page after logout
+  useEffect(() => {
+    fetchLocationData();
+  }, []);
+
+  // Handle clicking a jeep marker
+  const handleJeepClick = (jeep) => {
+    setSelectedJeep(jeep);
   };
 
   return (
-    <AppContainer>
-      {/* Sidebar */}
-      <SidebarContainer sx={{ display: { xs: 'none', md: 'block' }, width: '250px' }}>
-        <Typography
-          variant="h5"
-          component="div"
-          onClick={showHome}  // Clicking JEEP-PS logo shows home (map and routes)
-          sx={{
-            fontWeight: 'bold',
-            padding: '20px',
-            backgroundColor: '#4caf50',
-            color: '#ffffff',
-            cursor: 'pointer',  // Makes it look clickable
-          }}
-        >
-          JEEP-PS
-        </Typography>
+    <DashboardContainer>
+      {/* Main content: Jeep Status and Map */}
+      <Grid container spacing={2} sx={{ marginTop: 4 }}>
+        <Grid item xs={12} md={3}>
+          {/* Jeep Status Section */}
+          <StatusContainer>
+            <Typography variant="h6">Jeep Status</Typography>
+            {selectedJeep ? (
+              <Box>
+                <Typography variant="h6">Plate: {selectedJeep.plateNumber}</Typography>
+                <Typography>Model: {selectedJeep.model}</Typography>
+                <Typography>Route: {selectedJeep.route}</Typography>
+                <Typography>Status: {selectedJeep.status}</Typography>
+                <Divider sx={{ my: 1 }} />
+                <Typography variant="subtitle1">Driver: {selectedJeep.driver.name}</Typography>
+                <Typography>Driver Status: {selectedJeep.driver.status}</Typography>
+                <Typography>Direction: {selectedJeep.direction}</Typography>
+              </Box>
+            ) : (
+              <Typography variant="body2">Click a jeep marker to see its status</Typography>
+            )}
+          </StatusContainer>
+        </Grid>
 
-        <Box>
-          <List>
-            <ListItem button onClick={showAbout}>About</ListItem>
-            <ListItem button onClick={showAccount}>Account</ListItem>
-            <ListItem button onClick={handleLogout}>Logout</ListItem> {/* Logout button triggers handleLogout */}
-          </List>
-        </Box>
-      </SidebarContainer>
-
-      {/* Drawer for Mobile */}
-      {!isDrawerOpen && (
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          edge="start"
-          onClick={() => setIsDrawerOpen(true)}
-          sx={{
-            display: { md: 'none' },
-            position: 'fixed',
-            top: 10,
-            left: 10,
-            zIndex: 1300,
-          }}
-        >
-          <MenuIcon />
-        </IconButton>
-      )}
-
-      <Drawer anchor="left" open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
-        <DrawerContent>
-          <Typography
-            variant="h5"
-            component="div"
-            onClick={showHome}  // Clicking JEEP-PS logo in drawer shows home
-            sx={{
-              fontWeight: 'bold',
-              padding: '20px',
-              backgroundColor: '#4caf50',
-              color: '#ffffff',
-            }}
-          >
-            JEEP-PS
-          </Typography>
-          <List>
-            <ListItem button onClick={showAbout}>About</ListItem>
-            <ListItem button onClick={showAccount}>Account</ListItem>
-            <ListItem button onClick={handleLogout}>Logout</ListItem> {/* Logout button in Drawer */}
-          </List>
-        </DrawerContent>
-      </Drawer>
-
-      {/* Conditional Rendering based on currentView */}
-      {currentView === 'home' && (
-        <>
-          {/* Routes and Vehicles Panel */}
-          <PanelContainer sx={{ width: { xs: '100%', md: '30%' }, mt: { xs: 6, md: 0 } }}>
-            <Typography variant="h6" gutterBottom>Routes ({mockRoutes.length})</Typography>
-            <Divider />
-            <List>
-              {mockRoutes.map((route, index) => (
-                <ListItem
-                  key={index}
-                  button
-                  sx={{
-                    padding: '15px',
-                    borderBottom: '1px solid #ddd',
-                    '&:hover': { backgroundColor: '#f0f0f0' },
-                  }}
-                >
-                  <Typography variant="body1">{route.name}</Typography>
-                  <Typography variant="body2" sx={{ color: 'gray', ml: 'auto' }}>{route.status}</Typography>
-                </ListItem>
-              ))}
-            </List>
-          </PanelContainer>
-
-          {/* Map Panel */}
-          <MapContainer sx={{ width: { xs: '100%', md: '70%' }, mt: { xs: 3, md: 0 } }}>
-            <iframe
-              title="Jeep Map"
-              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d72791.59467740786!2d121.11279533982378!3d16.493911448929403!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x339044168316ed47%3A0x6984d3194e8cb833!2sBayombong%2C%20Nueva%20Vizcaya!5e0!3m2!1sen!2sph!4v1726255317782!5m2!1sen!2sph"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen=""
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
+        <Grid item xs={12} md={9}>
+          {/* Leaflet Map with Jeep Markers */}
+          <MapContainer center={[16.493911, 121.112795]} zoom={13} style={{ height: "600px", width: "100%" }}>
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
+            {jeepData.map((jeep, index) => (
+              <Marker
+                key={index}
+                position={[jeep.location.lat, jeep.location.lng]}
+                eventHandlers={{
+                  click: () => {
+                    handleJeepClick(jeep);
+                  },
+                }}
+              >
+                <Popup>
+                  <Typography variant="h6">{jeep.plateNumber}</Typography>
+                  <Typography>Model: {jeep.model}</Typography>
+                  <Typography>Route: {jeep.route}</Typography>
+                  <Typography>Status: {jeep.status}</Typography>
+                </Popup>
+              </Marker>
+            ))}
           </MapContainer>
-        </>
-      )}
-
-      {currentView === 'about' && <About />}
-      {currentView === 'account' && <Account />}
-    </AppContainer>
+        </Grid>
+      </Grid>
+    </DashboardContainer>
   );
 }
 

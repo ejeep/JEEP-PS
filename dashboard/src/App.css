@@ -1,11 +1,14 @@
 /* App.css */
+
 .app-layout {
   display: flex; /* Use flexbox to create a side-by-side layout */
 }
 
 .sidebar {
-  width: 250px; /* Fixed width for the sidebar */
-  flex-shrink: 0; /* Prevent shrinking */
+  width: 250px;
+  padding: 20px;
+  background-color: #f0f0f0;
+  flex-shrink: 0;
 }
 
 .main-content {

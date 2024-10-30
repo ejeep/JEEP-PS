@@ -14,6 +14,7 @@ import Settings from "./pages/Settings";
 import Commuter from "./pages/Commuter";
 import About from "./pages/About";  // Import About page
 import Account from "./pages/Account"; // Import Account page
+import 'leaflet/dist/leaflet.css';
 import './App.css'; // Add styles for main layout
 
 function App() {
