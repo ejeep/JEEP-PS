@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "start-server": "nodemon index.js",
+    "start-proxy": "nodemon proxy.js",
+    "start": "concurrently \"npm run start-server\" \"npm run start-proxy\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,8 +14,14 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",
+    "firebase-admin": "^13.0.0",
     "geolib": "^3.3.4",
     "haversine": "^1.1.1",
-    "mongoose-sequence": "^6.0.1"
+    "http-proxy": "^1.18.1",
+    "mongoose-sequence": "^6.0.1",
+    "ngrok": "^5.0.0-beta.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
   }
 }

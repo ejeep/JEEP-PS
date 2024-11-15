@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const locationController = require('../controllers/gpsDataController');
 
-router.get('/location', locationController.getLocation);
+// router.get('/location', locationController.getLocation);
 
-router.post('/update-location', locationController.updateLocation);
+router.post('/commuter-location', locationController.commuterLocation);
+router.post('/jeep-location', locationController.createLocation);
+router.get('/locations', locationController.getAllLocations);
 
 module.exports = router;

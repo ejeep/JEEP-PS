@@ -26,7 +26,7 @@ function Reports() {
   useEffect(() => {
     const fetchReportsData = async () => {
       try {
-        const response = await axios.get("http://localhost:3004/vehicle-data"); // Replace with your actual API endpoint
+        const response = await axios.get("http://localhost:3004/jeep-data/jeeps"); // Replace with your actual API endpoint
         setReports(response.data); // Set the fetched data into the reports state
         setLoading(false);
       } catch (error) {
@@ -92,7 +92,7 @@ function Reports() {
           <TableBody>
             {reports.map((report, index) => (
               <TableRow key={index} hover>
-                <TableCell>{report.vehicle}</TableCell>
+                <TableCell>{report.plateNumber}</TableCell>
                 <TableCell sx={{ color: getStatusColor(report.status), fontWeight: "bold" }}>
                   {report.status}
                 </TableCell>
