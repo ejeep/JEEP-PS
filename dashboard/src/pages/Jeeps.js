@@ -250,16 +250,15 @@ function Jeeps() {
                     <Delete />
                   </IconButton>
                   <Button
-  variant="outlined" // Change to outlined to match theme
-  onClick={() => handleOpenDriverModal(jeep)}
-  style={{
-    borderColor: "#4CAF50", // Green border
-    color: "#4CAF50", // Green text
-  }}
->
-  Assign Driver
-</Button>
-
+                    variant="outlined" // Change to outlined to match theme
+                    onClick={() => handleOpenDriverModal(jeep)}
+                    style={{
+                      borderColor: "#4CAF50", // Green border
+                      color: "#4CAF50", // Green text
+                    }}
+                  >
+                    Assign Driver
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -269,114 +268,65 @@ function Jeeps() {
 
       {/* Modal for adding/editing a jeep */}
       <Modal open={openModal} onClose={handleCloseModal}>
-        <Box
-          sx={{
-            padding: 2,
-            width: 400,
-            margin: "auto",
-            backgroundColor: "white",
-            borderRadius: 2,
-          }}
-        >
-          <Typography variant="h6">
-            {isEdit ? "Edit Jeep" : "Add Jeep"}
-          </Typography>
-          <TextField
-            label="Plate Number"
-            value={formData.plateNumber}
-            name="plateNumber"
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            disabled={isEdit}
-          />
-          <TextField
-            label="Model"
-            value={formData.model}
-            name="model"
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            label="Route"
-            value={formData.route}
-            name="route"
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            select
-            label="Route Direction"
-            value={formData.routeDirection}
-            name="routeDirection"
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          >
-            <MenuItem value="North Bound">North Bound</MenuItem>
-            <MenuItem value="South Bound">South Bound</MenuItem>
-            <MenuItem value="East Bound">East Bound</MenuItem>
-            <MenuItem value="West Bound">West Bound</MenuItem>
-          </TextField>
-
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: 2,
-            }}
-          >
-            <Button
-              variant="contained"
-              onClick={isEdit ? handleEdit : handleAdd}
-            >
-              {isEdit ? "Update" : "Add"}
-            </Button>
-            <Button variant="outlined" onClick={handleCloseModal}>
-              Cancel
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
-
-      {/* Modal for assigning driver */}
-      <Modal open={openDriverModal} onClose={handleCloseDriverModal}>
   <Box
     sx={{
       padding: 2,
       width: 400,
       margin: "auto",
-      backgroundColor: "#ffffff", // White background
+      backgroundColor: "white",
       borderRadius: 2,
-      boxShadow: 3, // Add shadow for depth
+      display: "flex", // Make it a flex container
+      flexDirection: "column", // Align contents vertically
+      justifyContent: "center", // Center vertically
+      position: "absolute", // Use absolute positioning
+      top: "50%", // Position the modal in the middle of the viewport
+      left: "50%", // Position the modal in the middle of the viewport
+      transform: "translate(-50%, -50%)", // Adjust to make sure it's centered perfectly
     }}
   >
-    <Typography variant="h6" sx={{ color: "#4CAF50" }}> {/* Green title */}
-      Assign Driver to {selectedJeep?.plateNumber}
+    <Typography variant="h6">
+      {isEdit ? "Edit Jeep" : "Add Jeep"}
     </Typography>
-    {activeDrivers.length > 0 ? (
-      <TextField
-        select
-        label="Select Driver"
-        onChange={(e) =>
-          handleAssignDriver(
-            drivers.find((driver) => driver.name === e.target.value)
-          )
-        }
-        fullWidth
-        margin="normal"
-      >
-        {activeDrivers.map((driver) => (
-          <MenuItem key={driver.id} value={driver.name}>
-            {driver.name}
-          </MenuItem>
-        ))}
-      </TextField>
-    ) : (
-      <Typography>No active drivers available.</Typography>
-    )}
+    <TextField
+      label="Plate Number"
+      value={formData.plateNumber}
+      name="plateNumber"
+      onChange={handleChange}
+      fullWidth
+      margin="normal"
+      disabled={isEdit}
+    />
+    <TextField
+      label="Model"
+      value={formData.model}
+      name="model"
+      onChange={handleChange}
+      fullWidth
+      margin="normal"
+    />
+    <TextField
+      label="Route"
+      value={formData.route}
+      name="route"
+      onChange={handleChange}
+      fullWidth
+      margin="normal"
+    />
+    <TextField
+      select
+      label="Route Direction"
+      value={formData.routeDirection}
+      name="routeDirection"
+      onChange={handleChange}
+      fullWidth
+      margin="normal"
+    >
+      <MenuItem value="North Bound">North Bound</MenuItem>
+      <MenuItem value="South Bound">South Bound</MenuItem>
+      <MenuItem value="East Bound">East Bound</MenuItem>
+      <MenuItem value="West Bound">West Bound</MenuItem>
+    </TextField>
+
     <Box
       sx={{
         display: "flex",
@@ -386,19 +336,19 @@ function Jeeps() {
     >
       <Button
         variant="contained"
-        onClick={() => handleAssignDriver(selectedJeep.assignedDriver)}
+        onClick={isEdit ? handleEdit : handleAdd}
         style={{
-          backgroundColor: "#4CAF50", // Green background for Assign Driver
+          backgroundColor: "#4CAF50", // Green background
           color: "#fff", // White text
         }}
       >
-        Assign Driver
+        {isEdit ? "Update" : "Add"}
       </Button>
       <Button
         variant="outlined"
-        onClick={handleCloseDriverModal}
+        onClick={handleCloseModal}
         style={{
-          borderColor: "#4CAF50", // Green border for Cancel
+          borderColor: "#4CAF50", // Green border
           color: "#4CAF50", // Green text
         }}
       >
@@ -408,6 +358,75 @@ function Jeeps() {
   </Box>
 </Modal>
 
+
+      {/* Modal for assigning driver */}
+      <Modal open={openDriverModal} onClose={handleCloseDriverModal}>
+        <Box
+          sx={{
+            padding: 2,
+            width: 400,
+            margin: "auto",
+            backgroundColor: "#ffffff", // White background
+            borderRadius: 2,
+            boxShadow: 3, // Add shadow for depth
+          }}
+        >
+          <Typography variant="h6" sx={{ color: "#4CAF50" }}>
+            {" "}
+            {/* Green title */}
+            Assign Driver to {selectedJeep?.plateNumber}
+          </Typography>
+          {activeDrivers.length > 0 ? (
+            <TextField
+              select
+              label="Select Driver"
+              onChange={(e) =>
+                handleAssignDriver(
+                  drivers.find((driver) => driver.name === e.target.value)
+                )
+              }
+              fullWidth
+              margin="normal"
+            >
+              {activeDrivers.map((driver) => (
+                <MenuItem key={driver.id} value={driver.name}>
+                  {driver.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          ) : (
+            <Typography>No active drivers available.</Typography>
+          )}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: 2,
+            }}
+          >
+            <Button
+              variant="contained"
+              onClick={() => handleAssignDriver(selectedJeep.assignedDriver)}
+              style={{
+                backgroundColor: "#4CAF50", // Green background for Assign Driver
+                color: "#fff", // White text
+              }}
+            >
+              Assign Driver
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleCloseDriverModal}
+              style={{
+                borderColor: "#4CAF50", // Green border
+                color: "#4CAF50", // Green text
+              }}
+            >
+              Cancel
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
 
       {/* Snackbar for error handling */}
       <Snackbar

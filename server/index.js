@@ -7,10 +7,10 @@ const driverData = require('./routes/driverDataRoutes');
 const jeepData = require('./routes/jeepDataRoutes');
 const locationRoutes = require('./routes/gpsDataRoutes');
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 3004;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/Jeep-PS';
-const SERVER_URL = process.env.SERVER_URL || `https://c1bb-110-54-154-44.ngrok-free.app`; // Server URL configuration
-// const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`; // Server URL configuration
+// const SERVER_URL = process.env.SERVER_URL || `https://c1bb-110-54-154-44.ngrok-free.app`; // Server URL configuration
+const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`; // Server URL configuration
 
 const app = express();
 

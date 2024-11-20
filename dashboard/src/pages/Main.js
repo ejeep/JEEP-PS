@@ -93,9 +93,6 @@ function Main() {
       setError("Geolocation is not supported by this browser.");
     }
   };
-  
-  
-  
 
   // Render the jeeps based on their direction (North/South Bound)
   const renderJeeps = (direction) =>
@@ -134,10 +131,10 @@ function Main() {
             <Table>
               <TableHead>
                 <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Departure Time</TableCell>
+                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>                  
                   <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
                   <TableCell style={{ color: "#fff" }}>Status</TableCell>
+                  <TableCell style={{ color: "#fff" }}>Departure Time</TableCell>
                   <TableCell style={{ color: "#fff" }}>ETA</TableCell>
                 </TableRow>
               </TableHead>
@@ -155,10 +152,10 @@ function Main() {
             <Table>
               <TableHead>
                 <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Departure Time</TableCell>
+                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>                  
                   <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
                   <TableCell style={{ color: "#fff" }}>Status</TableCell>
+                  <TableCell style={{ color: "#fff" }}>Departure Time</TableCell>
                   <TableCell style={{ color: "#fff" }}>ETA</TableCell>
                 </TableRow>
               </TableHead>

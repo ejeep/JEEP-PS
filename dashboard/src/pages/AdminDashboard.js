@@ -1,127 +1,120 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import { Box, Grid, Typography, Card, Divider, TextField, Button } from "@mui/material";
 import { styled } from "@mui/system";
+import axios from "axios";
 
-// Mock data for jeep statuses
-const mockData = [
-  {
-    plateNumber: "ABX-1234",
-    model: "Star8 Solar Jeepney",
-    route: "Bayombong-Solano",
-    status: "En route",
-    driver: {
-      name: "John Doe",
-      status: "Driving",
-    },
-    direction: "North Bound",
-  },
-  {
-    plateNumber: "CDE-5678",
-    model: "Star8 Solar Jeepney",
-    route: "Aritao-Baguio",
-    status: "En route",
-    driver: {
-      name: "Jane Smith",
-      status: "Driving",
-    },
-    direction: "South Bound",
-  },
-];
+// Fix for missing marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
-// Container for the whole dashboard
 const DashboardContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4),
 }));
 
-// Styled component for cards with green background
 const DashboardCard = styled(Card)(({ theme }) => ({
-  backgroundColor: "#28a745", // Green color
+  backgroundColor: "#28a745",
   color: "#fff",
   textAlign: "center",
   padding: theme.spacing(2),
-  borderRadius: "12px", // Rounded corners for better UI
-  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+  borderRadius: "12px",
+  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
 }));
 
-// Container for the jeep status section
 const StatusContainer = styled(Box)(({ theme }) => ({
   backgroundColor: "#ffffff",
   border: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(2),
-  height: "100%", // Flexible height
+  height: "100%",
   borderRadius: "12px",
   boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-  overflow: "auto", // Make sure content doesn't overflow
+  overflow: "auto",
 }));
 
 function AdminDashboard() {
+  const [jeepLocations, setJeepLocations] = useState([]);
   const [selectedJeep, setSelectedJeep] = useState(null);
 
-  // Handle clicking a jeep marker (dummy interaction)
+  // Fetch jeep location data from API
+  const fetchJeepLocations = async () => {
+    try {
+      const response = await axios.get("http://localhost:3004/gps/locations");
+      setJeepLocations(response.data); // Assuming the API returns an array of jeep location data
+    } catch (error) {
+      console.error("Error fetching jeep locations:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchJeepLocations();
+
+    // Optionally, poll the API every few seconds for real-time updates
+    const interval = setInterval(fetchJeepLocations, 600000); // Update every 10 seconds
+    return () => clearInterval(interval); // Cleanup interval on component unmount
+  }, []);
+
   const handleJeepClick = (jeep) => {
     setSelectedJeep(jeep);
   };
 
+  // Count the jeeps based on their status
+  const countStatus = (status) => {
+    return jeepLocations.filter(jeep => jeep.status === status).length;
+  };
+
   return (
     <DashboardContainer>
-      {/* Top row of cards displaying summary data */}
+      {/* Summary Cards */}
       <Grid container spacing={2} justifyContent="space-between">
         <Grid item xs={12} sm={6} md={3}>
           <DashboardCard>
-            <Typography variant="h6">Total Users</Typography>
-            <Typography variant="h4">150</Typography>
-          </DashboardCard>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardCard>
-            <Typography variant="h6">Total Drivers</Typography>
-            <Typography variant="h4">45</Typography>
-          </DashboardCard>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardCard>
             <Typography variant="h6">Total Jeeps</Typography>
-            <Typography variant="h4">60</Typography>
+            <Typography variant="h4">{jeepLocations.length}</Typography>
           </DashboardCard>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
           <DashboardCard>
-            <Typography variant="h6">Pending Reports</Typography>
-            <Typography variant="h4">10</Typography>
+            <Typography variant="h6">En Route</Typography>
+            <Typography variant="h4">{countStatus("en route")}</Typography>
+          </DashboardCard>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard>
+            <Typography variant="h6">Waiting</Typography>
+            <Typography variant="h4">{countStatus("waiting")}</Typography>
+          </DashboardCard>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard>
+            <Typography variant="h6">Maintenance</Typography>
+            <Typography variant="h4">{countStatus("maintenance")}</Typography>
           </DashboardCard>
         </Grid>
       </Grid>
 
       <br />
-      {/* Search bar and button */}
-      <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '20px', flexDirection: { xs: 'column', sm: 'row' } }}>
-        <TextField
-          variant="outlined"
-          placeholder="Search..."
-          fullWidth
-          sx={{ marginBottom: { xs: 2, sm: 0 }, marginRight: { sm: '10px' } }}
-        />
-        <Button variant="contained" style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-          Search
-        </Button>
+      <Box sx={{ display: "flex", alignItems: "center", marginBottom: "20px", flexDirection: { xs: "column", sm: "row" } }}>
+        <TextField variant="outlined" placeholder="Search..." fullWidth sx={{ marginBottom: { xs: 2, sm: 0 }, marginRight: { sm: "10px" } }} />
+        <Button variant="contained" style={{ backgroundColor: "#4CAF50", color: "#fff" }}>Search</Button>
       </Box>
 
-      {/* Main content: Jeep Status and Map */}
       <Grid container spacing={2} sx={{ marginTop: 4 }}>
         <Grid item xs={12} md={3}>
-          {/* Jeep Status Section */}
           <StatusContainer>
-            <Typography variant="h6">Jeep Status</Typography>
+            <Typography variant="h6">Jeep Information</Typography>
             {selectedJeep ? (
               <Box>
-                <Typography variant="h6">Plate: {selectedJeep.plateNumber}</Typography>
-                <Typography>Model: {selectedJeep.model}</Typography>
-                <Typography>Route: {selectedJeep.route}</Typography>
-                <Typography>Status: {selectedJeep.status}</Typography>
-                <Divider sx={{ my: 1 }} />
-                <Typography variant="subtitle1">Driver: {selectedJeep.driver.name}</Typography>
-                <Typography>Driver Status: {selectedJeep.driver.status}</Typography>
-                <Typography>Direction: {selectedJeep.direction}</Typography>
+                <Typography variant="h6">Jeep ID: {selectedJeep.jeepID}</Typography>
+                <Typography>Last Updated: {new Date(selectedJeep.timestamp).toLocaleString()}</Typography>
               </Box>
             ) : (
               <Typography variant="body2">Click a jeep marker to see its status</Typography>
@@ -130,35 +123,24 @@ function AdminDashboard() {
         </Grid>
 
         <Grid item xs={12} md={9}>
-          {/* Map with Jeep Markers */}
-          <div style={{ width: "100%", height: "450px", position: "relative" }}>
-            <iframe
-              title="Jeep Map" // Unique title for accessibility
-              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d72791.59467740786!2d121.11279533982378!3d16.493911448929403!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x339044168316ed47%3A0x6984d3194e8cb833!2sBayombong%2C%20Nueva%20Vizcaya!5e0!3m2!1sen!2sph!4v1726255317782!5m2!1sen!2sph"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen=""
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
-
-            {/* Simulated jeep markers */}
-            {mockData.map((jeep, index) => (
-              <div
+          {/* MapContainer with markers */}
+          <MapContainer center={[16.4939, 121.1128]} zoom={13} style={{ height: "450px", width: "100%" }}>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            {jeepLocations.map((jeep, index) => (
+              <Marker
                 key={index}
-                onClick={() => handleJeepClick(jeep)}
-                style={{
-                  position: "absolute",
-                  top: `${index * 50 + 100}px`, // Dummy positions for markers
-                  left: `${index * 50 + 200}px`,
-                  cursor: "pointer",
+                position={[jeep.jeepLocation.lat, jeep.jeepLocation.lng]}
+                eventHandlers={{
+                  click: () => handleJeepClick(jeep),
                 }}
               >
-                🚐
-              </div>
+                <Popup>
+                  <Typography>Jeep ID: {jeep.jeepID}</Typography>
+                  <Typography>Last Updated: {new Date(jeep.timestamp).toLocaleString()}</Typography>
+                </Popup>
+              </Marker>
             ))}
-          </div>
+          </MapContainer>
         </Grid>
       </Grid>
     </DashboardContainer>

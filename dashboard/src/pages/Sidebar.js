@@ -54,11 +54,11 @@ function Sidebar() {
               <TripOrigin /><span>Travels</span>
             </Link>
           </li>
-          <li>
+          {/* <li>
             <Link to="/clients">
               <People /><span>Clients</span>
             </Link>
-          </li>
+          </li> */}
           <li>
             <Link to="/drivers">
               <DirectionsCar /><span>Drivers</span>
