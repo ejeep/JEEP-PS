@@ -7,17 +7,28 @@ const driverData = require('./routes/driverDataRoutes');
 const jeepData = require('./routes/jeepDataRoutes');
 const locationRoutes = require('./routes/gpsDataRoutes');
 
-const PORT = process.env.PORT || 3004;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/Jeep-PS';
-// const SERVER_URL = process.env.SERVER_URL || `https://c1bb-110-54-154-44.ngrok-free.app`; // Server URL configuration
-const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`; // Server URL configuration
-
 const app = express();
 
+// Environment Variables
+const PORT = process.env.PORT || 3004;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/Jeep-PS';
+const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
+
 // Middleware
-app.use(cors({
-  origin: '*', // Allow any origin to access the server (use with caution in production)
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = ['http://localhost:3000']; // Specify allowed origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS policy does not allow access from this origin.'));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Routes
@@ -27,24 +38,40 @@ app.use('/gps', locationRoutes);
 
 // Arduino-friendly endpoint for testing connection
 app.get('/ping', (req, res) => {
-  res.json({ message: 'Server is reachable', serverURL: SERVER_URL });
+  res.status(200).json({ message: 'Server is reachable', serverURL: SERVER_URL });
 });
 
-// MongoDB connection
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log('Connected to MongoDB');
-})
-.catch((err) => {
-  console.error('Failed to connect to MongoDB', err);
+// Health Check
+app.get('/', (req, res) => {
+  res.status(200).send('Hello, world!');
 });
-app.get("/", (req, res) => {
-  res.send("Hello, world!");
+
+// MongoDB Connection
+const connectToDatabase = async () => {
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('Connected to MongoDB');
+  } catch (err) {
+    console.error('Failed to connect to MongoDB. Retrying...', err);
+    setTimeout(connectToDatabase, 5000); // Retry after 5 seconds
+  }
+};
+
+connectToDatabase();
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err.message);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+  });
 });
-// Start server
+
+// Start Server
 app.listen(PORT, () => {
   console.log(`Server is running on ${SERVER_URL}`);
 });

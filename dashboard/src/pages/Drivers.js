@@ -2,31 +2,35 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   IconButton,
   Paper,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
-  Modal,
   TextField,
+  Typography,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  Alert,
 } from "@mui/material";
 import { Edit, Delete, Add } from "@mui/icons-material";
-import axios from "axios"; // Import Axios for API requests
-import "./Drivers.css";
+import axios from "axios";
 
 function Drivers() {
   const [openModal, setOpenModal] = useState(false);
-  const [drivers, setDrivers] = useState([]); // State to store fetched driver data
-  const [searchTerm, setSearchTerm] = useState(""); // State for search term
+  const [drivers, setDrivers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     licenseNo: "",
@@ -38,28 +42,26 @@ function Drivers() {
       proofOfResidency: null,
       insuranceCertificate: null,
     },
-    status: "Active", // Default status
+    status: "Active",
   });
+  const [selectedDriverId, setSelectedDriverId] = useState(null);
+  const [alertMessage, setAlertMessage] = useState({ type: "", message: "" });
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const [selectedDriverId, setSelectedDriverId] = useState(null); // State for selected driver ID
-
-  // Fetch drivers from the backend API when the component mounts
   useEffect(() => {
     fetchDrivers();
   }, []);
 
   const fetchDrivers = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3004/driver-data/drivers"
-      ); // Replace with your API endpoint
-      setDrivers(response.data);
+      const response = await axios.get("http://localhost:3004/driver-data/drivers");
+      setDrivers(Array.isArray(response.data) ? response.data : []); // Ensure it's an array
     } catch (error) {
-      console.error("Error fetching drivers:", error);
+      showAlert("error", "Failed to fetch drivers. Please try again.");
     }
   };
+  
 
-  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -68,11 +70,22 @@ function Drivers() {
     }));
   };
 
-  // Handle file input changes
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (files && files[0]) {
       const file = files[0];
+      const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+      if (!allowedTypes.includes(file.type)) {
+        showAlert(
+          "error",
+          "Invalid file type. Only PDF, JPEG, and PNG are allowed."
+        );
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        showAlert("error", "File size exceeds 2MB limit.");
+        return;
+      }
       setFormData((prevState) => ({
         ...prevState,
         documents: {
@@ -83,61 +96,70 @@ function Drivers() {
     }
   };
 
-  // Handle opening and closing the modal
   const handleOpenModal = (driver = null) => {
     if (driver) {
-      // If editing a driver, populate form with driver data
       setFormData({
         name: driver.name,
         licenseNo: driver.licenseNo,
         contact: driver.contact,
         address: driver.address,
-        documents: driver.documents || {
-          licenseCopy: null,
-          idCopy: null,
-          proofOfResidency: null,
-          insuranceCertificate: null,
-        },
+        documents: driver.documents || {},
         status: driver.status,
       });
-      setSelectedDriverId(driver._id); // Set selected driver ID for updating
+      setSelectedDriverId(driver._id);
     } else {
-      // Reset form for adding new driver
-      setFormData({
-        name: "",
-        licenseNo: "",
-        contact: "",
-        address: "",
-        documents: {
-          licenseCopy: null,
-          idCopy: null,
-          proofOfResidency: null,
-          insuranceCertificate: null,
-        },
-        status: "Active",
-      });
-      setSelectedDriverId(null); // Reset selected driver ID
+      resetForm();
     }
     setOpenModal(true);
   };
 
-  const handleCloseModal = () => setOpenModal(false);
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    resetForm();
+  };
 
-  // Handle adding or updating a driver
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      licenseNo: "",
+      contact: "",
+      address: "",
+      documents: {
+        licenseCopy: null,
+        idCopy: null,
+        proofOfResidency: null,
+        insuranceCertificate: null,
+      },
+      status: "Active",
+    });
+    setSelectedDriverId(null);
+  };
+
+  const showAlert = (type, message) => {
+    setAlertMessage({ type, message });
+    setOpenSnackbar(true);
+  };
+
   const handleSubmit = async () => {
-    const formDataToSend = new FormData();
+    if (
+      !formData.name ||
+      !formData.licenseNo ||
+      !formData.contact ||
+      !formData.address
+    ) {
+      showAlert("error", "All fields are required.");
+      return;
+    }
 
-    // Append regular fields to formData
+    const formDataToSend = new FormData();
     formDataToSend.append("name", formData.name);
     formDataToSend.append("licenseNo", formData.licenseNo);
     formDataToSend.append("contact", formData.contact);
     formDataToSend.append("address", formData.address);
     formDataToSend.append("status", formData.status);
 
-    // Handling document uploads, ensuring only files are sent
     const { licenseCopy, idCopy, proofOfResidency, insuranceCertificate } =
       formData.documents;
-
     if (licenseCopy) formDataToSend.append("licenseCopy", licenseCopy);
     if (idCopy) formDataToSend.append("idCopy", idCopy);
     if (proofOfResidency)
@@ -147,87 +169,45 @@ function Drivers() {
 
     try {
       if (selectedDriverId) {
-        // Update driver
-        const response = await axios.put(
+        await axios.put(
           `http://localhost:3004/driver-data/update-driver/${selectedDriverId}`,
           formDataToSend,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
+        showAlert("success", "Driver updated successfully.");
       } else {
-        // Add new driver
-        const response = await axios.post(
+        await axios.post(
           "http://localhost:3004/driver-data/add-drivers",
           formDataToSend,
           {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
+            headers: { "Content-Type": "multipart/form-data" },
           }
         );
+        showAlert("success", "Driver added successfully.");
       }
-
-      // After successfully adding/updating the driver, fetch the updated drivers list
-      await fetchDrivers(); // Call the function to get the updated list of drivers
-
-      // Close the modal after successful submission
+      fetchDrivers();
       handleCloseModal();
-
-      // Reset form
-      setFormData({
-        name: "",
-        licenseNo: "",
-        contact: "",
-        address: "",
-        documents: {
-          licenseCopy: null,
-          idCopy: null,
-          proofOfResidency: null,
-          insuranceCertificate: null,
-        },
-        status: "Active",
-      });
-      setSelectedDriverId(null); // Reset selected driver ID
     } catch (error) {
-      if (error.response && error.response.status === 400) {
-        alert("Bad Request: Please check your inputs.");
-      } else {
-        alert(
-          "An error occurred while adding/updating the driver. Please try again."
-        );
-      }
-      console.error("Error adding/updating driver:", error);
+      showAlert("error", "An error occurred. Please try again.");
     }
   };
 
-  // Handle deleting a driver
   const handleDelete = async (driverId) => {
     if (window.confirm("Are you sure you want to delete this driver?")) {
       try {
         await axios.delete(
           `http://localhost:3004/driver-data/delete-driver/${driverId}`
         );
-        // After successfully deleting the driver, fetch the updated drivers list
-        await fetchDrivers(); // Call the function to get the updated list of drivers
+        showAlert("success", "Driver deleted successfully.");
+        fetchDrivers();
       } catch (error) {
-        alert("An error occurred while deleting the driver. Please try again.");
-        console.error("Error deleting driver:", error);
+        showAlert("error", "Failed to delete driver. Please try again.");
       }
     }
   };
 
-  // Filter drivers based on search term
-  const filteredDrivers = drivers.filter(
-    (driver) =>
-      (driver.name &&
-        typeof driver.name === "string" &&
-        driver.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (driver.licenseNo &&
-        typeof driver.licenseNo === "string" &&
-        driver.licenseNo.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredDrivers = drivers.filter((driver) =>
+    driver.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -235,24 +215,22 @@ function Drivers() {
       <Typography variant="h4" gutterBottom align="center">
         Manage Drivers
       </Typography>
-
       <TextField
         label="Search Drivers"
         variant="outlined"
         fullWidth
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{ marginBottom: "20px" }}
+        // onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{ marginBottom: 2 }}
       />
-
       <Button
         variant="contained"
-        startIcon={<Add />}
-        onClick={() => handleOpenModal()} // Open modal for adding driver
+        startIcon={<Add sx={{ color: "#fff" }} />} // Add icon with white color
+        onClick={() => handleOpenModal()}
+        sx={{ mb: 2 }}
         style={{
-          marginBottom: "20px",
-          backgroundColor: "#4CAF50",
-          color: "#fff",
+          backgroundColor: "#4CAF50", // Green background
+          color: "#fff", // White text
         }}
       >
         Add Driver
@@ -270,60 +248,48 @@ function Drivers() {
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
+          
           <TableBody>
-            {filteredDrivers.map((driver) => (
-              <TableRow key={driver._id}>
-                <TableCell>{driver.name}</TableCell>
-                <TableCell>{driver.licenseNo}</TableCell>
-                <TableCell>{driver.contact}</TableCell>
-                <TableCell>{driver.address}</TableCell>
-                <TableCell>{driver.status}</TableCell>
-                <TableCell>
-                  <IconButton
-                    style={{ color: "#4CAF50" }}
-                    onClick={() => handleOpenModal(driver)} // Open modal for editing driver
-                  >
-                    <Edit />
-                  </IconButton>
-                  <IconButton
-                     style={{ color: "#4CAF50" }}
-                    onClick={() => handleDelete(driver._id)} // Handle driver deletion
-                  >
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+  {filteredDrivers.map((driver) => (
+    <TableRow key={driver._id}>
+      <TableCell>{driver.name}</TableCell>
+      <TableCell>{driver.licenseNo}</TableCell>
+      <TableCell>{driver.contact}</TableCell>
+      <TableCell>{driver.address}</TableCell>
+      <TableCell>{driver.status}</TableCell>
+      <TableCell>
+        <IconButton
+          onClick={() => handleOpenModal(driver)}
+          style={{ color: "#4CAF50" }}
+        >
+          <Edit />
+        </IconButton>
+        <IconButton
+          onClick={() => handleDelete(driver._id)}
+          style={{ color: "#4CAF50" }}
+        >
+          <Delete />
+        </IconButton>
+      </TableCell>
+    </TableRow>
+  ))}
+</TableBody>
+
         </Table>
       </TableContainer>
-
-      {/* Modal for Adding/Editing Driver */}
-      <Modal open={openModal} onClose={handleCloseModal}>
-        <Box
-          sx={{
-            width: 400,
-            maxHeight: "80vh", // Limit the height to 80% of the viewport height
-            padding: 4,
-            backgroundColor: "white",
-            margin: "auto",
-            overflowY: "auto", // Enable scrolling
-            marginTop: "2%",
-            borderRadius: 2,
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            {selectedDriverId ? "Edit Driver" : "Add Driver"}
-          </Typography>
-
+      <Dialog open={openModal} onClose={handleCloseModal}>
+        <DialogTitle>
+          {selectedDriverId ? "Edit Driver" : "Add Driver"}
+        </DialogTitle>
+        <DialogContent>
           <TextField
             label="Name"
             name="name"
             value={formData.name}
             onChange={handleChange}
             fullWidth
-            style={{ marginBottom: "16px" }}
             required
+            margin="normal"
           />
           <TextField
             label="License No."
@@ -331,18 +297,17 @@ function Drivers() {
             value={formData.licenseNo}
             onChange={handleChange}
             fullWidth
-            style={{ marginBottom: "16px" }}
             required
+            margin="normal"
           />
-
           <TextField
             label="Contact"
             name="contact"
             value={formData.contact}
             onChange={handleChange}
             fullWidth
-            style={{ marginBottom: "16px" }}
             required
+            margin="normal"
           />
           <TextField
             label="Address"
@@ -350,10 +315,10 @@ function Drivers() {
             value={formData.address}
             onChange={handleChange}
             fullWidth
-            style={{ marginBottom: "16px" }}
             required
+            margin="normal"
           />
-          <FormControl fullWidth style={{ marginBottom: "16px" }}>
+          <FormControl fullWidth margin="normal">
             <InputLabel>Status</InputLabel>
             <Select
               name="status"
@@ -367,45 +332,63 @@ function Drivers() {
           <Typography variant="subtitle1" gutterBottom>
             Upload Documents:
           </Typography>
-          <TextField
-            type="file"
-            name="licenseCopy"
-            onChange={handleFileChange}
-            style={{ marginBottom: "8px" }}
-          />
-          <TextField
-            type="file"
-            name="idCopy"
-            onChange={handleFileChange}
-            style={{ marginBottom: "8px" }}
-          />
-          <TextField
-            type="file"
-            name="proofOfResidency"
-            onChange={handleFileChange}
-            style={{ marginBottom: "8px" }}
-          />
-          <TextField
-            type="file"
-            name="insuranceCertificate"
-            onChange={handleFileChange}
-            style={{ marginBottom: "16px" }}
-          />
-
+          {[
+            "licenseCopy",
+            "idCopy",
+            "proofOfResidency",
+            "insuranceCertificate",
+          ].map((doc) => (
+            <TextField
+              key={doc}
+              type="file"
+              name={doc}
+              onChange={handleFileChange}
+              fullWidth
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+            />
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseModal}
+            style={{
+              borderColor: "#4CAF50", // Green border
+              color: "#4CAF50", // Green text
+            }}
+          >
+            Cancel
+          </Button>
           <Button
             variant="contained"
             onClick={handleSubmit}
-            fullWidth
             style={{
-              marginBottom: "20px",
-              backgroundColor: "#4CAF50",
-              color: "#fff",
+              backgroundColor: "#4CAF50", // Green background
+              color: "#fff", // White text
             }}
           >
-            {selectedDriverId ? "Update Driver" : "Add Driver"}
+            Save
           </Button>
-        </Box>
-      </Modal>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={4000}
+        onClose={() => setOpenSnackbar(false)}
+      >
+        <Alert
+          onClose={() => setOpenSnackbar(false)}
+          severity={alertMessage.type}
+          sx={{
+            width: "100%",
+            backgroundColor:
+              alertMessage.type === "success" ? "#DFF2BF" : "#FFBABA", // Success: light green, Error: light red
+            color: alertMessage.type === "success" ? "#4CAF50" : "#D8000C", // Text colors
+          }}
+        >
+          {alertMessage.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

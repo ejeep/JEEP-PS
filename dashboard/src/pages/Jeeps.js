@@ -183,6 +183,17 @@ function Jeeps() {
     setOpenModal(true);
   };
 
+  const handleSearch = (e) => {
+    const query = e.target.value.toLowerCase();
+    const filteredJeeps = jeeps.filter(
+      (jeep) =>
+        jeep.plateNumber.toLowerCase().includes(query) ||
+        jeep.model.toLowerCase().includes(query) ||
+        jeep.route.toLowerCase().includes(query)
+    );
+    setJeeps(filteredJeeps);
+  };
+
   const activeDrivers = drivers.filter((driver) => driver.status === "Active");
 
   return (
@@ -197,7 +208,9 @@ function Jeeps() {
           placeholder="Search..."
           fullWidth
           sx={{ marginRight: "10px" }}
+          onChange={handleSearch} // Add this handler
         />
+
         <Button
           variant="contained"
           sx={{ backgroundColor: "#4CAF50", color: "#fff" }}
@@ -208,7 +221,7 @@ function Jeeps() {
 
       <Button
         variant="contained"
-        startIcon={<Add />}
+        startIcon={<Add sx={{ color: "#fff" }} />}
         onClick={handleOpenModal}
         style={{
           marginBottom: "20px",
@@ -268,135 +281,65 @@ function Jeeps() {
 
       {/* Modal for adding/editing a jeep */}
       <Modal open={openModal} onClose={handleCloseModal}>
-  <Box
-    sx={{
-      padding: 2,
-      width: 400,
-      margin: "auto",
-      backgroundColor: "white",
-      borderRadius: 2,
-      display: "flex", // Make it a flex container
-      flexDirection: "column", // Align contents vertically
-      justifyContent: "center", // Center vertically
-      position: "absolute", // Use absolute positioning
-      top: "50%", // Position the modal in the middle of the viewport
-      left: "50%", // Position the modal in the middle of the viewport
-      transform: "translate(-50%, -50%)", // Adjust to make sure it's centered perfectly
-    }}
-  >
-    <Typography variant="h6">
-      {isEdit ? "Edit Jeep" : "Add Jeep"}
-    </Typography>
-    <TextField
-      label="Plate Number"
-      value={formData.plateNumber}
-      name="plateNumber"
-      onChange={handleChange}
-      fullWidth
-      margin="normal"
-      disabled={isEdit}
-    />
-    <TextField
-      label="Model"
-      value={formData.model}
-      name="model"
-      onChange={handleChange}
-      fullWidth
-      margin="normal"
-    />
-    <TextField
-      label="Route"
-      value={formData.route}
-      name="route"
-      onChange={handleChange}
-      fullWidth
-      margin="normal"
-    />
-    <TextField
-      select
-      label="Route Direction"
-      value={formData.routeDirection}
-      name="routeDirection"
-      onChange={handleChange}
-      fullWidth
-      margin="normal"
-    >
-      <MenuItem value="North Bound">North Bound</MenuItem>
-      <MenuItem value="South Bound">South Bound</MenuItem>
-      <MenuItem value="East Bound">East Bound</MenuItem>
-      <MenuItem value="West Bound">West Bound</MenuItem>
-    </TextField>
-
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        marginTop: 2,
-      }}
-    >
-      <Button
-        variant="contained"
-        onClick={isEdit ? handleEdit : handleAdd}
-        style={{
-          backgroundColor: "#4CAF50", // Green background
-          color: "#fff", // White text
-        }}
-      >
-        {isEdit ? "Update" : "Add"}
-      </Button>
-      <Button
-        variant="outlined"
-        onClick={handleCloseModal}
-        style={{
-          borderColor: "#4CAF50", // Green border
-          color: "#4CAF50", // Green text
-        }}
-      >
-        Cancel
-      </Button>
-    </Box>
-  </Box>
-</Modal>
-
-
-      {/* Modal for assigning driver */}
-      <Modal open={openDriverModal} onClose={handleCloseDriverModal}>
         <Box
           sx={{
             padding: 2,
             width: 400,
             margin: "auto",
-            backgroundColor: "#ffffff", // White background
+            backgroundColor: "white",
             borderRadius: 2,
-            boxShadow: 3, // Add shadow for depth
+            display: "flex", // Make it a flex container
+            flexDirection: "column", // Align contents vertically
+            justifyContent: "center", // Center vertically
+            position: "absolute", // Use absolute positioning
+            top: "50%", // Position the modal in the middle of the viewport
+            left: "50%", // Position the modal in the middle of the viewport
+            transform: "translate(-50%, -50%)", // Adjust to make sure it's centered perfectly
           }}
         >
-          <Typography variant="h6" sx={{ color: "#4CAF50" }}>
-            {" "}
-            {/* Green title */}
-            Assign Driver to {selectedJeep?.plateNumber}
+          <Typography variant="h6">
+            {isEdit ? "Edit Jeep" : "Add Jeep"}
           </Typography>
-          {activeDrivers.length > 0 ? (
-            <TextField
-              select
-              label="Select Driver"
-              onChange={(e) =>
-                handleAssignDriver(
-                  drivers.find((driver) => driver.name === e.target.value)
-                )
-              }
-              fullWidth
-              margin="normal"
-            >
-              {activeDrivers.map((driver) => (
-                <MenuItem key={driver.id} value={driver.name}>
-                  {driver.name}
-                </MenuItem>
-              ))}
-            </TextField>
-          ) : (
-            <Typography>No active drivers available.</Typography>
-          )}
+          <TextField
+            label="Plate Number"
+            value={formData.plateNumber}
+            name="plateNumber"
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            disabled={isEdit}
+          />
+          <TextField
+            label="Model"
+            value={formData.model}
+            name="model"
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Route"
+            value={formData.route}
+            name="route"
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            select
+            label="Route Direction"
+            value={formData.routeDirection}
+            name="routeDirection"
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          >
+            <MenuItem value="North Bound">North Bound</MenuItem>
+            <MenuItem value="South Bound">South Bound</MenuItem>
+            <MenuItem value="East Bound">East Bound</MenuItem>
+            <MenuItem value="West Bound">West Bound</MenuItem>
+          </TextField>
+
           <Box
             sx={{
               display: "flex",
@@ -406,17 +349,17 @@ function Jeeps() {
           >
             <Button
               variant="contained"
-              onClick={() => handleAssignDriver(selectedJeep.assignedDriver)}
+              onClick={isEdit ? handleEdit : handleAdd}
               style={{
-                backgroundColor: "#4CAF50", // Green background for Assign Driver
+                backgroundColor: "#4CAF50", // Green background
                 color: "#fff", // White text
               }}
             >
-              Assign Driver
+              {isEdit ? "Update" : "Add"}
             </Button>
             <Button
               variant="outlined"
-              onClick={handleCloseDriverModal}
+              onClick={handleCloseModal}
               style={{
                 borderColor: "#4CAF50", // Green border
                 color: "#4CAF50", // Green text
@@ -428,12 +371,88 @@ function Jeeps() {
         </Box>
       </Modal>
 
+      {/* Modal for assigning driver */}
+      <Modal open={openDriverModal} onClose={handleCloseDriverModal}>
+        <Box
+          sx={{
+            padding: 2,
+            width: 400,
+            margin: "auto",
+            backgroundColor: "#ffffff",
+            borderRadius: 2,
+            boxShadow: 3,
+          }}
+        >
+          <Typography variant="h6" sx={{ color: "#4CAF50" }}>
+            Assign Driver to {selectedJeep?.plateNumber}
+          </Typography>
+
+          {activeDrivers.length > 0 ? (
+            <>
+              <TextField
+                select
+                label="Select Driver"
+                onChange={(e) =>
+                  handleAssignDriver(
+                    drivers.find((driver) => driver.name === e.target.value)
+                  )
+                }
+                fullWidth
+                margin="normal"
+              >
+                {activeDrivers.map((driver) => (
+                  <MenuItem key={driver.id} value={driver.name}>
+                    {driver.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: 2,
+                }}
+              >
+                <Button
+                  variant="contained"
+                  onClick={() =>
+                    handleAssignDriver(selectedJeep.assignedDriver)
+                  }
+                  style={{
+                    backgroundColor: "#4CAF50",
+                    color: "#fff",
+                  }}
+                >
+                  Assign Driver
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={handleCloseDriverModal}
+                  style={{
+                    borderColor: "#4CAF50",
+                    color: "#4CAF50",
+                  }}
+                >
+                  Cancel
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <Typography sx={{ marginTop: 2 }}>
+              No active drivers available to assign.
+            </Typography>
+          )}
+        </Box>
+      </Modal>
+
       {/* Snackbar for error handling */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         message={error}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{ width: "100%" }}
       />
     </Box>
   );

@@ -1,4 +1,3 @@
-// controllers/jeepController.js
 const Jeep = require("../models/jeepData");
 
 // Fetch all jeeps
@@ -22,14 +21,18 @@ exports.createJeep = async (req, res) => {
   }
 
   try {
+    // Check if the plateNumber already exists
+    const existingJeep = await Jeep.findOne({ plateNumber });
+    if (existingJeep) {
+      return res.status(400).json({ message: "Plate number already exists." });
+    }
+
+    // Create and save the new jeep
     const newJeep = new Jeep({ plateNumber, model, route, routeDirection });
     await newJeep.save();
     res.status(201).json(newJeep);
   } catch (error) {
     console.error("Error creating jeep:", error);
-    if (error.code === 11000) {
-      return res.status(400).json({ message: "Plate number must be unique." });
-    }
     res.status(500).json({ message: "Server error. Unable to create jeep." });
   }
 };
@@ -37,12 +40,12 @@ exports.createJeep = async (req, res) => {
 // Update an existing jeep
 // Update Jeep data, including the assigned driver
 exports.updateJeep = async (req, res) => {
-  const { route, routeDirection, assignedDriver } = req.body; // Include assignedDriver in the request body
+  const { route, routeDirection, assignedDriver } = req.body;
 
   try {
     const updatedJeep = await Jeep.findOneAndUpdate(
       { plateNumber: req.params.plateNumber },
-      { route, routeDirection, assignedDriver }, // Add assignedDriver to the update object
+      { route, routeDirection, assignedDriver },
       { new: true, runValidators: true }
     );
 
@@ -57,10 +60,9 @@ exports.updateJeep = async (req, res) => {
   }
 };
 
-
 // Update jeep status from Arduino
 exports.updateJeepStatus = async (req, res) => {
-  const { plateNumber, status } = req.body; // Expecting plateNumber and new status in the request body
+  const { plateNumber, status } = req.body;
 
   // Basic validation
   if (!plateNumber || !status) {
@@ -70,17 +72,15 @@ exports.updateJeepStatus = async (req, res) => {
   try {
     // Find the jeep by plate number and update the status
     const updatedJeep = await Jeep.findOneAndUpdate(
-      { plateNumber: plateNumber },
-      { status: status }, // Update the status
-      { new: true, runValidators: true } // Return updated document and run validation
+      { plateNumber },
+      { status },
+      { new: true, runValidators: true }
     );
 
-    // Check if the jeep was found and updated
     if (!updatedJeep) {
       return res.status(404).json({ message: "Jeep not found." });
     }
 
-    // Send back the updated jeep data
     res.status(200).json(updatedJeep);
   } catch (error) {
     console.error("Error updating jeep status:", error);
