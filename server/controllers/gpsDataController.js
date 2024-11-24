@@ -45,10 +45,19 @@ exports.createLocation = async (req, res) => {
       return res.status(400).json({ message: "jeepID, latitude, and longitude are required." });
     }
 
+    // Convert lat and lng to numbers explicitly
+    const lat = parseFloat(jeepLocation.lat);
+    const lng = parseFloat(jeepLocation.lng);
+
+    // Check if lat and lng are valid numbers
+    if (isNaN(lat) || isNaN(lng)) {
+      return res.status(400).json({ message: "Invalid latitude or longitude value." });
+    }
+
     // Create a new location record
     const locationData = new Location({
       jeepID,
-      jeepLocation,
+      jeepLocation: { lat, lng }, // Use the valid lat/lng values
       timestamp: timestamp ? new Date(timestamp) : Date.now() // Ensure timestamp is a Date object
     });
 
@@ -61,6 +70,7 @@ exports.createLocation = async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 };
+
 
 // Retrieve all location entries
 exports.getAllLocations = async (req, res) => {

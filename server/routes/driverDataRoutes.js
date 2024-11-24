@@ -8,7 +8,6 @@ const router = express.Router();
 const validateDriver = [
   body('name').isString().trim().notEmpty().withMessage('Name is required.'),
   body('licenseNo').isString().trim().notEmpty().withMessage('License number is required.'),
-  body('vehicleType').isString().isIn(['Jeepney', 'Taxi', 'Bus', 'Van', 'Motorcycle', 'Tricycle']).withMessage('Invalid vehicle type.'),
   body('contact').isString().isLength({ min: 10, max: 11 }).withMessage('Contact must be 10 or 11 digits long.'),
   body('address').isString().trim().notEmpty().withMessage('Address is required.'),
 ];

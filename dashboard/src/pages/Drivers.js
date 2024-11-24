@@ -10,12 +10,6 @@ import {
   IconButton,
   Paper,
   Snackbar,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
   FormControl,
@@ -23,14 +17,20 @@ import {
   Select,
   MenuItem,
   Alert,
+  Tooltip,
+  CircularProgress,
+  DialogContentText,
+  DialogTitle as MuiDialogTitle,
 } from "@mui/material";
-import { Edit, Delete, Add } from "@mui/icons-material";
+import { Edit, Delete, Add, Search } from "@mui/icons-material";
 import axios from "axios";
+import { DataGrid } from "@mui/x-data-grid";
 
 function Drivers() {
   const [openModal, setOpenModal] = useState(false);
   const [drivers, setDrivers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredDrivers, setFilteredDrivers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     licenseNo: "",
@@ -47,20 +47,37 @@ function Drivers() {
   const [selectedDriverId, setSelectedDriverId] = useState(null);
   const [alertMessage, setAlertMessage] = useState({ type: "", message: "" });
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchDrivers();
   }, []);
 
   const fetchDrivers = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get("http://localhost:3004/driver-data/drivers");
-      setDrivers(Array.isArray(response.data) ? response.data : []); // Ensure it's an array
+      const response = await axios.get(
+        "http://localhost:3004/driver-data/drivers"
+      );
+      setDrivers(response.data);
+      setFilteredDrivers(response.data);
+      setLoading(false);
     } catch (error) {
-      showAlert("error", "Failed to fetch drivers. Please try again.");
+      console.error("Error fetching drivers:", error);
+      showAlert("error", "Failed to fetch drivers.");
+      setLoading(false);
     }
   };
-  
+
+  const handleSearch = () => {
+    const filtered = drivers.filter(
+      (driver) =>
+        driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        driver.licenseNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        driver.contact.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredDrivers(filtered);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,32 +85,6 @@ function Drivers() {
       ...prevState,
       [name]: value,
     }));
-  };
-
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    if (files && files[0]) {
-      const file = files[0];
-      const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
-      if (!allowedTypes.includes(file.type)) {
-        showAlert(
-          "error",
-          "Invalid file type. Only PDF, JPEG, and PNG are allowed."
-        );
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        showAlert("error", "File size exceeds 2MB limit.");
-        return;
-      }
-      setFormData((prevState) => ({
-        ...prevState,
-        documents: {
-          ...prevState.documents,
-          [name]: file,
-        },
-      }));
-    }
   };
 
   const handleOpenModal = (driver = null) => {
@@ -140,7 +131,8 @@ function Drivers() {
     setOpenSnackbar(true);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     if (
       !formData.name ||
       !formData.licenseNo ||
@@ -148,6 +140,17 @@ function Drivers() {
       !formData.address
     ) {
       showAlert("error", "All fields are required.");
+      return;
+    }
+
+    const isDuplicate = drivers.some(
+      (driver) =>
+        driver.licenseNo.toLowerCase() === formData.licenseNo.toLowerCase() &&
+        driver._id !== selectedDriverId // Exclude the current driver being edited
+    );
+
+    if (isDuplicate) {
+      showAlert("error", "This License Number already exists.");
       return;
     }
 
@@ -179,9 +182,7 @@ function Drivers() {
         await axios.post(
           "http://localhost:3004/driver-data/add-drivers",
           formDataToSend,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
         showAlert("success", "Driver added successfully.");
       }
@@ -206,185 +207,218 @@ function Drivers() {
     }
   };
 
-  const filteredDrivers = drivers.filter((driver) =>
-    driver.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    if (files && files[0]) {
+      const file = files[0];
+      setFormData((prevState) => ({
+        ...prevState,
+        documents: {
+          ...prevState.documents,
+          [name]: file,
+        },
+      }));
+    }
+  };
+
+  const columns = [
+    { field: "name", headerName: "Name", width: 200 },
+    { field: "licenseNo", headerName: "License No.", width: 180 },
+    { field: "contact", headerName: "Contact", width: 180 },
+    { field: "address", headerName: "Address", width: 220 },
+    { field: "status", headerName: "Status", width: 150 },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 150,
+      renderCell: (params) => (
+        <>
+          <Tooltip title="Edit">
+            <IconButton
+              onClick={() => handleOpenModal(params.row)}
+              style={{ color: "#4CAF50" }}
+            >
+              <Edit />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton
+              onClick={() => handleDelete(params.row._id)}
+              style={{ color: "#4CAF50" }}
+            >
+              <Delete />
+            </IconButton>
+          </Tooltip>
+        </>
+      ),
+    },
+  ];
 
   return (
     <Box sx={{ padding: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
         Manage Drivers
       </Typography>
-      <TextField
-        label="Search Drivers"
-        variant="outlined"
-        fullWidth
-        value={searchTerm}
-        // onChange={(e) => setSearchTerm(e.target.value)}
-        sx={{ marginBottom: 2 }}
-      />
-      <Button
-        variant="contained"
-        startIcon={<Add sx={{ color: "#fff" }} />} // Add icon with white color
-        onClick={() => handleOpenModal()}
-        sx={{ mb: 2 }}
-        style={{
-          backgroundColor: "#4CAF50", // Green background
-          color: "#fff", // White text
-        }}
-      >
-        Add Driver
-      </Button>
 
-      <TableContainer component={Paper} className="table-container">
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>License No.</TableCell>
-              <TableCell>Contact</TableCell>
-              <TableCell>Address</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          
-          <TableBody>
-  {filteredDrivers.map((driver) => (
-    <TableRow key={driver._id}>
-      <TableCell>{driver.name}</TableCell>
-      <TableCell>{driver.licenseNo}</TableCell>
-      <TableCell>{driver.contact}</TableCell>
-      <TableCell>{driver.address}</TableCell>
-      <TableCell>{driver.status}</TableCell>
-      <TableCell>
-        <IconButton
-          onClick={() => handleOpenModal(driver)}
-          style={{ color: "#4CAF50" }}
-        >
-          <Edit />
-        </IconButton>
-        <IconButton
-          onClick={() => handleDelete(driver._id)}
-          style={{ color: "#4CAF50" }}
-        >
-          <Delete />
-        </IconButton>
-      </TableCell>
-    </TableRow>
-  ))}
-</TableBody>
-
-        </Table>
-      </TableContainer>
-      <Dialog open={openModal} onClose={handleCloseModal}>
-        <DialogTitle>
-          {selectedDriverId ? "Edit Driver" : "Add Driver"}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            fullWidth
-            required
-            margin="normal"
-          />
-          <TextField
-            label="License No."
-            name="licenseNo"
-            value={formData.licenseNo}
-            onChange={handleChange}
-            fullWidth
-            required
-            margin="normal"
-          />
-          <TextField
-            label="Contact"
-            name="contact"
-            value={formData.contact}
-            onChange={handleChange}
-            fullWidth
-            required
-            margin="normal"
-          />
-          <TextField
-            label="Address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            fullWidth
-            required
-            margin="normal"
-          />
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Status</InputLabel>
-            <Select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-            >
-              <MenuItem value="Active">Active</MenuItem>
-              <MenuItem value="Inactive">Inactive</MenuItem>
-            </Select>
-          </FormControl>
-          <Typography variant="subtitle1" gutterBottom>
-            Upload Documents:
-          </Typography>
-          {[
-            "licenseCopy",
-            "idCopy",
-            "proofOfResidency",
-            "insuranceCertificate",
-          ].map((doc) => (
-            <TextField
-              key={doc}
-              type="file"
-              name={doc}
-              onChange={handleFileChange}
-              fullWidth
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-            />
-          ))}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCloseModal}
-            style={{
-              borderColor: "#4CAF50", // Green border
-              color: "#4CAF50", // Green text
-            }}
-          >
-            Cancel
-          </Button>
+      <Grid container justifyContent="space-between" alignItems="center">
+        <Grid item>
           <Button
             variant="contained"
-            onClick={handleSubmit}
+            startIcon={<Add sx={{ color: "#fff" }} />}
+            onClick={() => handleOpenModal()}
+            sx={{ mb: 2 }}
             style={{
               backgroundColor: "#4CAF50", // Green background
               color: "#fff", // White text
             }}
           >
-            Save
+            Add Driver
           </Button>
-        </DialogActions>
+        </Grid>
+        <Grid item>
+          <TextField
+            label="Search"
+            variant="outlined"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyUp={handleSearch}
+            sx={{ mb: 2, width: "250px" }}
+            InputProps={{
+              endAdornment: <Search />,
+            }}
+          />
+        </Grid>
+      </Grid>
+
+      <Paper elevation={3}>
+        <DataGrid
+          rows={filteredDrivers}
+          columns={columns}
+          pageSize={5}
+          getRowId={(row) => row._id}
+          disableSelectionOnClick
+          loading={loading}
+        />
+      </Paper>
+
+      <Dialog open={openModal} onClose={handleCloseModal}>
+        <DialogTitle>
+          {selectedDriverId ? "Edit Driver" : "Add Driver"}
+        </DialogTitle>
+        <DialogContent>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label="Driver Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="License No."
+              name="licenseNo"
+              value={formData.licenseNo}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Contact"
+              name="contact"
+              value={formData.contact}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+
+            <TextField
+              label="License Copy"
+              name="licenseCopy"
+              type="file"
+              onChange={handleFileChange}
+              fullWidth
+            />
+            <TextField
+              label="ID Copy"
+              name="idCopy"
+              type="file"
+              onChange={handleFileChange}
+              fullWidth
+            />
+            <TextField
+              label="Proof of Residency"
+              name="proofOfResidency"
+              type="file"
+              onChange={handleFileChange}
+              fullWidth
+            />
+            <TextField
+              label="Insurance Certificate"
+              name="insuranceCertificate"
+              type="file"
+              onChange={handleFileChange}
+              fullWidth
+            />
+
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Status</InputLabel>
+              <Select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <MenuItem value="Active">Active</MenuItem>
+                <MenuItem value="Inactive">Inactive</MenuItem>
+              </Select>
+            </FormControl>
+
+            <DialogActions>
+              <Button
+                onClick={handleCloseModal}
+                style={{
+                  width: "48%",
+                  backgroundColor: "#fff", // Green background
+                  color: "#4CAF50",
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                style={{
+                  width: "48%",
+                  backgroundColor: "#4CAF50", // Green background
+                  color: "#fff",
+                }}
+              >
+                Save
+              </Button>
+            </DialogActions>
+          </form>
+        </DialogContent>
       </Dialog>
+
       <Snackbar
         open={openSnackbar}
-        autoHideDuration={4000}
+        autoHideDuration={6000}
         onClose={() => setOpenSnackbar(false)}
       >
         <Alert
           onClose={() => setOpenSnackbar(false)}
           severity={alertMessage.type}
-          sx={{
-            width: "100%",
-            backgroundColor:
-              alertMessage.type === "success" ? "#DFF2BF" : "#FFBABA", // Success: light green, Error: light red
-            color: alertMessage.type === "success" ? "#4CAF50" : "#D8000C", // Text colors
-          }}
         >
           {alertMessage.message}
         </Alert>

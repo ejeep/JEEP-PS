@@ -13,13 +13,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.7",
     "dotenv": "^16.4.5",
     "firebase-admin": "^13.0.0",
     "geolib": "^3.3.4",
     "haversine": "^1.1.1",
     "http-proxy": "^1.18.1",
     "mongoose-sequence": "^6.0.1",
-    "ngrok": "^5.0.0-beta.2"
+    "ngrok": "^5.0.0-beta.2",
+    "serialport": "^9.2.8"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
