@@ -6,7 +6,8 @@
   "scripts": {
     "start-server": "nodemon index.js",
     "start-proxy": "nodemon proxy.js",
-    "start": "concurrently \"npm run start-server\" \"npm run start-proxy\"",
+    "start-arduino": "nodemon arduino-script.js",
+    "start": "concurrently \"npm run start-server\" \"npm run start-proxy\" \"npm run start-arduino\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
