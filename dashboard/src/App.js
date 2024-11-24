@@ -1,8 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Sidebar from "./pages/Sidebar";
-import Login from "./pages/Login";  // Import the Login page
+import Login from "./pages/Login"; // Import the Login page
 import Main from "./pages/Main"; // Import Main.js
+import Management from "./pages/Management"; // Import Management.js
 import AdminDashboard from "./pages/AdminDashboard";
 import Travels from "./pages/Travels";
 import Clients from "./pages/Clients";
@@ -12,10 +13,10 @@ import Status from "./pages/Status";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Commuter from "./pages/Commuter";
-import About from "./pages/About";  // Import About page
+import About from "./pages/About"; // Import About page
 import Account from "./pages/Account"; // Import Account page
-import 'leaflet/dist/leaflet.css';
-import './App.css'; // Add styles for main layout
+import "leaflet/dist/leaflet.css";
+import "./App.css"; // Add styles for main layout
 
 function App() {
   return (
@@ -29,10 +30,13 @@ function App() {
         <Route path="/commuter" element={<Commuter />} />
 
         {/* Routes for About and Account */}
-        <Route path="/about" element={<About />} /> {/* Add About page route */}
-        <Route path="/account" element={<Account />} /> {/* Add Account page route */}
+        <Route path="/about" element={<About />} />
+        <Route path="/account" element={<Account />} />
 
-        {/* Main layout with Sidebar and Main content for Admin*/}
+        {/* Management layout */}
+        <Route path="/management/*" element={<Management />} />
+
+        {/* Main layout with Sidebar and Main content for Admin */}
         <Route
           path="*"
           element={
@@ -47,7 +51,7 @@ function App() {
                   <Route path="/jeeps" element={<Jeeps />} />
                   <Route path="/status" element={<Status />} />
                   <Route path="/reports" element={<Reports />} />
-                  <Route path="/settings" element={<Settings />} />  
+                  <Route path="/settings" element={<Settings />} />
                 </Routes>
               </div>
             </div>
