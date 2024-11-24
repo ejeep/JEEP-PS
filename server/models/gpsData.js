@@ -7,6 +7,7 @@ const LocationSchema = new mongoose.Schema({
     lat: { type: Number, required: true },  // Latitude
     lng: { type: Number, required: true }   // Longitude
   },
+  speed: { type: Number, required: true }, // Speed of the vehicle in m/s
   timestamp: { type: Date, default: Date.now } // Timestamp for the location data
 });
 

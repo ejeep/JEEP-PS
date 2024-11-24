@@ -37,40 +37,32 @@ exports.commuterLocation = async (req, res) => {
 };
 exports.createLocation = async (req, res) => {
   try {
-    console.log("Received Data:", req.body);
-    const { jeepID, jeepLocation, timestamp } = req.body;
+    const { jeepID, jeepLocation, speed, timestamp } = req.body;
 
-    // Validate required fields
-    if (!jeepID || !jeepLocation || !jeepLocation.lat || !jeepLocation.lng) {
-      return res.status(400).json({ message: "jeepID, latitude, and longitude are required." });
+    // Validate input
+    if (!jeepID || !jeepLocation || !jeepLocation.lat || !jeepLocation.lng || speed === undefined) {
+      return res.status(400).json({ message: "jeepID, latitude, longitude, and speed (m/s) are required." });
     }
 
-    // Convert lat and lng to numbers explicitly
-    const lat = parseFloat(jeepLocation.lat);
-    const lng = parseFloat(jeepLocation.lng);
-
-    // Check if lat and lng are valid numbers
-    if (isNaN(lat) || isNaN(lng)) {
-      return res.status(400).json({ message: "Invalid latitude or longitude value." });
+    // Validate speed
+    if (speed < 0) {
+      return res.status(400).json({ message: "Speed cannot be negative." });
     }
 
-    // Create a new location record
     const locationData = new Location({
       jeepID,
-      jeepLocation: { lat, lng }, // Use the valid lat/lng values
-      timestamp: timestamp ? new Date(timestamp) : Date.now() // Ensure timestamp is a Date object
+      jeepLocation,
+      speed,
+      timestamp: timestamp ? new Date(timestamp) : Date.now()
     });
 
-    // Save the location to the database
     await locationData.save();
-
-    return res.status(201).json({ message: "Location updated successfully.", data: locationData });
+    res.status(201).json({ message: "Location saved successfully.", data: locationData });
   } catch (error) {
-    console.error("Error updating location:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    console.error("Error saving location:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 };
-
 
 // Retrieve all location entries
 exports.getAllLocations = async (req, res) => {
@@ -104,24 +96,56 @@ exports.getLocationById = async (req, res) => {
 };
 
 // Update a location entry
-exports.updateLocation = async (req, res) => {
+exports.updateLocationWithETA = async (req, res) => {
+  const { jeepLocation, timestamp } = req.body;
+
   try {
-    const updatedLocation = await Location.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedLocation) {
-      return res.status(404).json({ message: 'Location not found.' });
+    // Fetch the commuter's location from the database
+    const commuter = await CommuterLocation.findOne().sort({ timestamp: -1 }); // Fetch the latest commuter location
+
+    if (!commuter) {
+      return res.status(404).json({ message: "Commuter location not found." });
     }
-    res.status(200).json({
-      message: 'Location data updated successfully!',
-      data: updatedLocation,
+
+    const commuterLocation = commuter.commuterLocation;
+
+    // Calculate the distance between the jeep and the commuter
+    const distance = haversineDistance(
+      jeepLocation.lat,
+      jeepLocation.lng,
+      commuterLocation.latitude,
+      commuterLocation.longitude
+    );
+
+    // Assume an average speed in m/s (e.g., 10 m/s or ~36 km/h)
+    const speed = 10;
+
+    // Calculate ETA in seconds
+    const etaInSeconds = distance / speed;
+
+    // Convert ETA to minutes for better readability
+    const etaInMinutes = (etaInSeconds / 60).toFixed(2);
+
+    // Save the data, including ETA, into the database
+    const newLocation = new Location({
+      jeepLocation,
+      timestamp: timestamp ? new Date(timestamp) : Date.now(),
+      eta: etaInMinutes,
+    });
+
+    await newLocation.save();
+
+    res.status(201).json({
+      message: "Location and ETA saved successfully.",
+      eta: etaInMinutes + " minutes",
+      distance: (distance / 1000).toFixed(2) + " km", // Display distance in kilometers
     });
   } catch (error) {
-    console.error('Error updating location:', error);
-    res.status(500).json({
-      message: 'Failed to update location data.',
-      error: error.message,
-    });
+    console.error("Error calculating ETA:", error);
+    res.status(500).json({ error: "Failed to calculate ETA." });
   }
 };
+
 
 // Delete a location entry
 exports.deleteLocation = async (req, res) => {
@@ -139,36 +163,3 @@ exports.deleteLocation = async (req, res) => {
     });
   }
 };
-
-// exports.updateLocation = async (req, res) => {
-//   const { jeepLocation, timestamp } = req.body;
-
-//   try {
-//     // Fetch commuter's location
-//     const commuterLocation = await getCommuterLocation();
-
-//     // Calculate distance and ETA
-//     const distance = haversineDistance(
-//       jeepLocation.lat,
-//       jeepLocation.lng,
-//       commuterLocation.lat,
-//       commuterLocation.lng
-//     );
-//     const speed = 10; // Average speed in m/s
-//     const eta = (distance / speed) / 60; // ETA in minutes
-
-//     // Save data to MongoDB
-//     const newLocation = new Location({
-//       jeepLocation,
-//       commuterLocation,
-//       timestamp: new Date(parseInt(timestamp)),
-//       eta
-//     });
-//     await newLocation.save();
-
-//     res.status(201).json({ message: 'Location and ETA saved successfully', eta });
-//   } catch (error) {
-//     console.error('Error saving location data:', error);
-//     res.status(500).json({ error: 'Failed to save location data' });
-//   }
-// };
