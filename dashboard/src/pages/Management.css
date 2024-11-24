@@ -1,0 +1,56 @@
+/* src/pages/Management.css */
+.management-layout {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .management-layout .management-sidebar {
+    width: 250px;
+    background-color: #ffffff; /* Light background */
+    color: #333; /* Neutral text color */
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .management-layout .management-sidebar h2 {
+    color: #28a745; /* Green header color */
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .management-layout .management-sidebar ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .management-layout .management-sidebar ul li {
+    margin: 10px 0;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease-in-out;
+  }
+  
+  .management-layout .management-sidebar ul li a {
+    color: #333; /* Neutral text color */
+    text-decoration: none;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .management-layout .management-sidebar ul li a:hover {
+    background-color: #c7f9cc; /* Soft green background on hover */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .management-layout .management-sidebar ul li a span {
+    margin-left: 10px;
+  }
+  
+  .management-content {
+    flex: 1;
+    padding: 20px;
+    background-color: #f9f9f9;
+    overflow-y: auto;
+  }
+  
