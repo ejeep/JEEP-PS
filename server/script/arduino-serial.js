@@ -34,44 +34,42 @@ const sendDataToMERN = async (jeepID, lat, lng, speed) => {
   }
 };
 
-// Read data from Arduino
-parser.on('data', (data) => {
-  console.log('Data received from Arduino:', data);
+let smsMessages = [];
 
-  // Trim any unwanted whitespace or newline characters from the data
-  const cleanedData = data.trim();
+// Handle incoming data from Arduino (GSM Module)
+parser.on('data', (chunk) => {
+  console.log('Received raw data:', chunk.toString());
 
-  try {
-    // Parse the cleaned JSON data from the Arduino
-    const parsedData = JSON.parse(cleanedData);
+  const message = chunk.toString().trim();
 
-    // Log the parsed data for debugging
-    console.log("Parsed data:", parsedData);
-
-    // Extract latitude, longitude, jeepID, and speed from the parsed object
-    const latitude = parsedData.jeepLocation?.lat;
-    const longitude = parsedData.jeepLocation?.lng;
-    const jeepID = parsedData.jeepID;
-    const speedKmh = parsedData.speed; // Speed in km/h from Arduino
-
-    // Validate that latitude, longitude, jeepID, and speed are present
-    if (latitude && longitude && jeepID && speedKmh !== undefined) {
-      console.log("Valid data:", { latitude, longitude, jeepID, speedKmh });
-
-      // Convert speed from km/h to m/s
-      const speedMs = convertSpeedToMetersPerSecond(parseFloat(speedKmh));
-
-      // Send the data to MERN backend
-      sendDataToMERN(
-        jeepID,
-        parseFloat(latitude),
-        parseFloat(longitude),
-        speedMs
-      );
-    } else {
-      console.log('Invalid or missing latitude, longitude, jeepID, or speed');
+  // Process only SMS data (e.g., messages starting with "+CMT:")
+  if (message.includes("+CMT:")) {
+    // Example of extracting SMS content after "+CMT:"
+    const smsContent = message.split("+CMT:")[1]?.trim();
+    if (smsContent) {
+      smsMessages.push(smsContent); // Store SMS content in memory
     }
-  } catch (error) {
-    console.log('Error parsing data:', error);
   }
 });
+
+
+
+// Function to process and parse a single message
+// function processMessage(message) {
+//   try {
+//     const parsedData = JSON.parse(message);
+//     const { jeepID, jeepLocation, speed } = parsedData;
+
+//     if (jeepID && jeepLocation?.lat && jeepLocation?.lng && speed !== undefined) {
+//       const speedMs = convertSpeedToMetersPerSecond(parseFloat(speed));
+//       sendDataToMERN(jeepID, parseFloat(jeepLocation.lat), parseFloat(jeepLocation.lng), speedMs);
+//     } else {
+//       console.log('Invalid JSON structure:', parsedData);
+//     }
+//   } catch (error) {
+//     console.log('Received non-JSON data or parsing error:', error.message);
+//   }
+// }
+
+
+
