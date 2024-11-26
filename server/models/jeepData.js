@@ -1,4 +1,3 @@
-// models/jeepModel.js
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
@@ -41,8 +40,15 @@ const jeepSchema = new Schema({
     default: "Waiting",
     required: true,
   },
+  timeSchedule: {
+    type: [String], // Array of strings in HH:mm format
+    required: true,
+    validate: {
+      validator: (times) => times.every((time) => /^\d{1,2}:\d{2}(?:\s?[APap][Mm])?$/.test(time)),
+      message: "Time must be in HH:mm format (e.g., '5:00 AM').",
+    },
+  },
 }, { timestamps: true });
-
 
 const Jeep = mongoose.model("Jeep", jeepSchema);
 module.exports = Jeep;

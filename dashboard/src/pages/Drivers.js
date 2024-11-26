@@ -225,12 +225,12 @@ function Drivers() {
     { field: "name", headerName: "Name", width: 200 },
     { field: "licenseNo", headerName: "License No.", width: 180 },
     { field: "contact", headerName: "Contact", width: 180 },
-    { field: "address", headerName: "Address", width: 220 },
-    { field: "status", headerName: "Status", width: 150 },
+    { field: "address", headerName: "Address", width: 450 },
+    { field: "status", headerName: "Status", width: 125 },
     {
       field: "actions",
       headerName: "Actions",
-      width: 150,
+      width: 125,
       renderCell: (params) => (
         <>
           <Tooltip title="Edit">

@@ -13,11 +13,11 @@ exports.getAllJeeps = async (req, res) => {
 
 // Create a new jeep
 exports.createJeep = async (req, res) => {
-  const { plateNumber, model, route, routeDirection } = req.body;
+  const { plateNumber, model, route, routeDirection, timeSchedule } = req.body;
 
   // Basic validation
-  if (!plateNumber || !model || !route || !routeDirection) {
-    return res.status(400).json({ message: "All fields are required." });
+  if (!plateNumber || !model || !route || !routeDirection || !timeSchedule) {
+    return res.status(400).json({ message: "All fields are required, including timeSchedule." });
   }
 
   try {
@@ -28,7 +28,7 @@ exports.createJeep = async (req, res) => {
     }
 
     // Create and save the new jeep
-    const newJeep = new Jeep({ plateNumber, model, route, routeDirection });
+    const newJeep = new Jeep({ plateNumber, model, route, routeDirection, timeSchedule });
     await newJeep.save();
     res.status(201).json(newJeep);
   } catch (error) {
@@ -38,14 +38,14 @@ exports.createJeep = async (req, res) => {
 };
 
 // Update an existing jeep
-// Update Jeep data, including the assigned driver
+// Update Jeep data, including the assigned driver and time schedule
 exports.updateJeep = async (req, res) => {
-  const { route, routeDirection, assignedDriver } = req.body;
+  const { route, routeDirection, assignedDriver, timeSchedule } = req.body;
 
   try {
     const updatedJeep = await Jeep.findOneAndUpdate(
       { plateNumber: req.params.plateNumber },
-      { route, routeDirection, assignedDriver },
+      { route, routeDirection, assignedDriver, timeSchedule },
       { new: true, runValidators: true }
     );
 

@@ -5,7 +5,7 @@ import { styled } from "@mui/system";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import './Travels.css'; // Import the CSS file for additional styling
-
+import debounce from "lodash.debounce";
 const LoginButton = styled(Button)(({ theme }) => ({
   backgroundColor: "#ffffff",
   color: "#28a745",
@@ -41,7 +41,8 @@ function Main() {
           id: jeep.id,
           plateNumber: jeep.plateNumber,
           routeDirection: jeep.routeDirection,
-          status: jeep.status || "Waiting" // Default status to "Waiting" if not set
+          status: jeep.status || "Waiting", // Default status to "Waiting" if not set
+          timeSchedule: jeep.timeSchedule
         })));
         setLoading(false);
       } catch (error) {
@@ -56,25 +57,19 @@ function Main() {
   }, []);
 
   // Function to get commuter's location
-  const getCommuterLocation = async () => {
+  const getCommuterLocation = debounce(async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
   
           console.log("Sending location:", {
-            commuterLocation: {
-              latitude: latitude,
-              longitude: longitude,
-            }
+            commuterLocation: { latitude, longitude }
           });
   
           try {
             const response = await axios.post("http://localhost:3004/gps/commuter-location", {
-              commuterLocation: {
-                latitude: latitude,
-                longitude: longitude,
-              }
+              commuterLocation: { latitude, longitude }
             });
   
             console.log("Response from server:", response.data); // Log the server response
@@ -92,7 +87,7 @@ function Main() {
     } else {
       setError("Geolocation is not supported by this browser.");
     }
-  };
+  }, 60000);
 
   // Render the jeeps based on their direction (North/South Bound)
   const renderJeeps = (direction) =>
@@ -103,6 +98,7 @@ function Main() {
           <TableCell>{jeep.plateNumber}</TableCell>
           <TableCell>{jeep.routeDirection}</TableCell>
           <TableCell>{jeep.status}</TableCell>
+          <TableCell>{jeep.timeSchedule}</TableCell>
         </TableRow>
       ));
 

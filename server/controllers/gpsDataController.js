@@ -37,11 +37,13 @@ exports.commuterLocation = async (req, res) => {
 };
 exports.createLocation = async (req, res) => {
   try {
-    const { jeepID, jeepLocation, speed, timestamp } = req.body;
+    console.log(req.body); // Log the incoming request body for debugging
+
+    const { jeepID, jeepLocation, speed, seatAvailability, status, direction, condition, timestamp } = req.body;
 
     // Validate input
-    if (!jeepID || !jeepLocation || !jeepLocation.lat || !jeepLocation.lng || speed === undefined) {
-      return res.status(400).json({ message: "jeepID, latitude, longitude, and speed (m/s) are required." });
+    if (!jeepID || !jeepLocation || !jeepLocation.lat || !jeepLocation.lng || speed === undefined || seatAvailability === undefined || !status || !direction || !condition) {
+      return res.status(400).json({ message: "jeepID, latitude, longitude, speed, seatAvailability, status, direction, and condition are required." });
     }
 
     // Validate speed
@@ -53,6 +55,10 @@ exports.createLocation = async (req, res) => {
       jeepID,
       jeepLocation,
       speed,
+      seatAvailability,
+      status,
+      direction,
+      condition,
       timestamp: timestamp ? new Date(timestamp) : Date.now()
     });
 
@@ -63,6 +69,7 @@ exports.createLocation = async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
 
 // Retrieve all location entries
 exports.getAllLocations = async (req, res) => {
@@ -147,19 +154,3 @@ exports.updateLocationWithETA = async (req, res) => {
 };
 
 
-// Delete a location entry
-exports.deleteLocation = async (req, res) => {
-  try {
-    const deletedLocation = await Location.findByIdAndDelete(req.params.id); // Delete location by ID
-    if (!deletedLocation) {
-      return res.status(404).json({ message: 'Location not found.' });
-    }
-    res.status(200).json({ message: 'Location deleted successfully!' });
-  } catch (error) {
-    console.error('Error deleting location:', error);
-    res.status(500).json({
-      message: 'Failed to delete location data.',
-      error: error.message,
-    });
-  }
-};

@@ -14,6 +14,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Alert,
 } from "@mui/material";
 import { Edit, Delete, Add, Search } from "@mui/icons-material";
 import axios from "axios";
@@ -22,9 +23,9 @@ import "./Jeeps.css";
 
 const API_BASE_URL = "http://localhost:3004";
 
-function Jeeps() {
+function Schedule() {
   const [openModal, setOpenModal] = useState(false);
-  const [openDriverModal, setOpenDriverModal] = useState(false);
+  const [openScheduleModal, setOpenScheduleModal] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // New state for delete confirmation dialog
   const [isEdit, setIsEdit] = useState(false);
   const [selectedJeep, setSelectedJeep] = useState(null);
@@ -33,20 +34,25 @@ function Jeeps() {
     model: "",
     route: "",
     routeDirection: "North Bound",
+    timeSchedule: "",
   });
   const [jeeps, setJeeps] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredJeeps, setFilteredJeeps] = useState([]);
+  const [scheduleData, setScheduleData] = useState({
+    timeSchedule: "",
+  });
   const style = {
     position: "absolute",
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
     bgcolor: "background.paper",
-    border: "2px solid #000",
     boxShadow: 24,
     p: 4,
   };
@@ -76,7 +82,14 @@ function Jeeps() {
   };
 
   const handleError = (message) => {
-    setError(message);
+    setSnackbarMessage(message);
+    setSnackbarSeverity("error"); // Set severity to error
+    setOpenSnackbar(true);
+  };
+
+  const handleSuccess = (message) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity("success"); // Set severity to success
     setOpenSnackbar(true);
   };
 
@@ -97,13 +110,6 @@ function Jeeps() {
 
   const handleCloseModal = () => setOpenModal(false);
 
-  const handleOpenDriverModal = (jeep) => {
-    setSelectedJeep(jeep);
-    setOpenDriverModal(true);
-  };
-
-  const handleCloseDriverModal = () => setOpenDriverModal(false);
-
   const handleOpenDeleteDialog = (jeep) => {
     setSelectedJeep(jeep); // Save the jeep object to be deleted
     setOpenDeleteDialog(true); // Open the delete confirmation dialog
@@ -118,27 +124,17 @@ function Jeeps() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleAdd = async () => {
-    // Form validation
-    if (!formData.plateNumber || !formData.model || !formData.route) {
-      return handleError("All fields are required");
-    }
-
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/jeep-data/addVehicle`,
-        formData
-      );
-      setJeeps([...jeeps, response.data]);
-      setFilteredJeeps((prevFilteredJeeps) => [
-        ...prevFilteredJeeps,
-        response.data,
-      ]);
-      handleCloseModal();
-    } catch (error) {
-      handleError("Error adding jeep");
-    }
+  const handleOpenScheduleModal = (jeep) => {
+    setSelectedJeep(jeep); // Set the selected jeep for the schedule modal
+    setScheduleData({ timeSchedule: jeep.timeSchedule || "" }); // Set existing schedule data if available
+    setOpenScheduleModal(true); // Open the modal
   };
+
+  const handleScheduleChange = (e) => {
+    setScheduleData({ ...scheduleData, [e.target.name]: e.target.value }); // Update schedule time
+  };
+
+  const handleCloseScheduleModal = () => setOpenScheduleModal(false);
 
   const handleEdit = async () => {
     if (!selectedJeep) return handleError("No jeep selected for editing");
@@ -149,6 +145,7 @@ function Jeeps() {
         {
           route: formData.route,
           routeDirection: formData.routeDirection,
+          timeSchedule: formData.timeSchedule,
         }
       );
 
@@ -192,45 +189,45 @@ function Jeeps() {
     }
   };
 
-  const handleAssignDriver = async (driver) => {
-    if (!driver) return handleError("No driver selected");
-
-    // Check if the driver is already assigned to another jeep
-    const isDriverAssigned = jeeps.some(
-      (jeep) => jeep.assignedDriver === driver.name
-    );
-
-    if (isDriverAssigned) {
-      return handleError("This driver is already assigned to another jeep.");
+  const handleAssignSchedule = async () => {
+    // Check if a jeep is selected and if the timeSchedule is provided
+    if (!selectedJeep || !scheduleData.timeSchedule) {
+      return handleError("Please specify a schedule time");
     }
 
     try {
+      // Send PUT request to update the schedule for the selected jeep
       const response = await axios.put(
         `${API_BASE_URL}/jeep-data/updateVehicle/${selectedJeep.plateNumber}`,
         {
-          model: selectedJeep.model,
-          route: selectedJeep.route,
-          routeDirection: selectedJeep.routeDirection,
-          assignedDriver: driver.name,
+          timeSchedule: scheduleData.timeSchedule, // Schedule data to be updated
         }
       );
 
       const updatedJeep = response.data;
+
+      // Update the jeeps list to reflect the changes for the updated jeep
       setJeeps((prevJeeps) =>
         prevJeeps.map((jeep) =>
           jeep.plateNumber === updatedJeep.plateNumber ? updatedJeep : jeep
         )
       );
 
+      // Similarly, update the filtered jeeps list if you have one
       setFilteredJeeps((prevFilteredJeeps) =>
         prevFilteredJeeps.map((jeep) =>
           jeep.plateNumber === updatedJeep.plateNumber ? updatedJeep : jeep
         )
       );
 
-      handleCloseDriverModal();
+      // Close the schedule modal after the update
+      handleCloseScheduleModal();
+
+      // Success message after the schedule is assigned
+      handleSuccess("Schedule successfully saved!");
     } catch (error) {
-      handleError("Error assigning driver");
+      // Handle any errors that occur during the scheduling process
+      handleError("Error assigning schedule");
     }
   };
 
@@ -266,9 +263,9 @@ function Jeeps() {
   const columns = [
     { field: "plateNumber", headerName: "Plate Number", width: 150 },
     { field: "model", headerName: "Model", width: 150 },
-    { field: "routeDirection", headerName: "Route Direction", width: 150 },
-    { field: "route", headerName: "Route", width: 220 },
+    { field: "route", headerName: "Route", width: 200 },
     { field: "assignedDriver", headerName: "Assigned Driver", width: 250 },
+    { field: "timeSchedule", headerName: "Schedule Time", width: 250 },
     {
       field: "actions",
       headerName: "Actions",
@@ -286,13 +283,13 @@ function Jeeps() {
           </IconButton>
           <Button
             variant="outlined" // Change to outlined to match theme
-            onClick={() => handleOpenDriverModal(params.row)}
+            onClick={() => handleOpenScheduleModal(params.row)}
             style={{
               borderColor: "#4CAF50", // Green border
               color: "#4CAF50", // Green text
             }}
           >
-            Assign Driver
+            Assign Schedule
           </Button>
         </>
       ),
@@ -311,20 +308,11 @@ function Jeeps() {
   return (
     <Box sx={{ padding: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
-        Manage Jeeps
+        Schedule Assignment
       </Typography>
 
       <Grid container justifyContent="space-between" alignItems="center">
-        <Grid item>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleOpenModal}
-            sx={{ marginBottom: 2, backgroundColor: "#4CAF50", color: "#fff" }}
-          >
-            <Add /> Add Jeep
-          </Button>
-        </Grid>
+        <Grid item></Grid>
         <Grid item>
           <TextField
             label="Search"
@@ -359,7 +347,7 @@ function Jeeps() {
       >
         <Box sx={{ ...style, width: 400 }}>
           <Typography id="modal-title" variant="h6" component="h2">
-            {isEdit ? "Edit Jeep" : "Add Jeep"}
+            {"Edit Jeep"}
           </Typography>
           <TextField
             label="Plate Number"
@@ -414,86 +402,59 @@ function Jeeps() {
             </Button>
             <Button
               variant="contained"
-              onClick={isEdit ? handleEdit : handleAdd}
+              onClick={handleEdit}
               style={{
                 width: "48%",
                 backgroundColor: "#4CAF50", // Green background
                 color: "#fff",
               }}
             >
-              {isEdit ? "Save Changes" : "Add Jeep"}
+              {"Save Changes"}
             </Button>
           </Box>
         </Box>
       </Modal>
 
-      {/* Driver Assignment Modal */}
-      <Modal open={openDriverModal} onClose={handleCloseDriverModal}>
-        <Box
-          sx={{
-            padding: 2,
-            width: 400,
-            margin: "auto",
-            backgroundColor: "#ffffff", // White background
-            borderRadius: 2,
-            boxShadow: 3, // Add shadow for depth
-          }}
-        >
-          <Typography variant="h6" sx={{ color: "#4CAF50" }}>
-            {" "}
-            {/* Green title */}
-            Assign Driver to {selectedJeep?.plateNumber}
+      <Modal
+        open={openScheduleModal}
+        onClose={handleCloseScheduleModal}
+        aria-labelledby="schedule-modal-title"
+        aria-describedby="schedule-modal-description"
+      >
+        <Box sx={{ ...style, width: 400 }}>
+          <Typography id="schedule-modal-title" variant="h6" component="h2">
+            Assign Schedule for {selectedJeep?.plateNumber}
           </Typography>
-          {activeDrivers.length > 0 ? (
-            <TextField
-              select
-              label="Select Driver"
-              onChange={(e) =>
-                handleAssignDriver(
-                  drivers.find((driver) => driver.name === e.target.value)
-                )
-              }
-              fullWidth
-              margin="normal"
-            >
-              {activeDrivers.map((driver) => (
-                <MenuItem key={driver.id} value={driver.name}>
-                  {driver.name}
-                </MenuItem>
-              ))}
-            </TextField>
-          ) : (
-            <Typography variant="body2" sx={{ color: "#D32F2F" }}>
-              No active drivers available.
-            </Typography>
-          )}
-
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: 2,
-            }}
-          >
+          <TextField
+            label="Schedule Time"
+            variant="outlined"
+            name="timeSchedule"
+            fullWidth
+            value={scheduleData.timeSchedule}
+            onChange={handleScheduleChange}
+            style={{ marginBottom: "20px", marginTop: "20px" }}
+          />
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Button
-              variant="contained"
-              onClick={() => handleAssignDriver(selectedJeep.assignedDriver)}
+              onClick={handleCloseScheduleModal}
               style={{
-                backgroundColor: "#4CAF50", // Green background for Assign Driver
-                color: "#fff", // White text
-              }}
-            >
-              Assign Driver
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={handleCloseDriverModal}
-              style={{
-                borderColor: "#4CAF50", // Green border for Cancel
-                color: "#4CAF50", // Green text
+                width: "48%",
+                backgroundColor: "#fff",
+                color: "#4CAF50",
               }}
             >
               Cancel
+            </Button>
+            <Button
+              onClick={handleAssignSchedule}
+              style={{
+                width: "48%",
+                backgroundColor: "#4CAF50",
+                color: "#fff",
+                border: "1px solid #4CAF50",
+              }}
+            >
+              Save Schedule
             </Button>
           </Box>
         </Box>
@@ -536,12 +497,20 @@ function Jeeps() {
       {/* Snackbar for Error */}
       <Snackbar
         open={openSnackbar}
-        autoHideDuration={6000}
+        autoHideDuration={3000} // Duration to show the Snackbar before automatically closing
         onClose={handleCloseSnackbar}
-        message={error}
-      />
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }} // Position at the bottom center
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
 
-export default Jeeps;
+export default Schedule;

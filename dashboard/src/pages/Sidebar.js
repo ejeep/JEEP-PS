@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Dashboard, DirectionsCar, People, Commute, Report, Settings, Logout, TripOrigin } from '@mui/icons-material';
-import './Sidebar.css';
-import LogoutModal from '../components/LogoutModal';
+import React, { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Menu,
+  Dashboard,
+  DirectionsCar,
+  People,
+  Commute,
+  Report,
+  Settings,
+  Logout,
+  TripOrigin,
+  DepartureBoard
+} from "@mui/icons-material";
+import "./Sidebar.css";
+import LogoutModal from "../components/LogoutModal";
 
 function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
@@ -20,19 +31,19 @@ function Sidebar() {
 
   const confirmLogout = () => {
     setShowLogoutModal(false);
-    navigate('/');
+    navigate("/");
   };
 
   const closeModal = () => {
     setShowLogoutModal(false);
   };
 
-  if (location.pathname === '/') {
+  if (location.pathname === "/") {
     return null;
   }
 
   return (
-    <div className={`sidebar ${isOpen ? 'open' : 'collapsed'}`}>
+    <div className={`sidebar ${isOpen ? "open" : "collapsed"}`}>
       <div className="sidebar-header">
         <div className="toggle-icon" onClick={toggleSidebar}>
           <Menu />
@@ -46,12 +57,14 @@ function Sidebar() {
         <ul>
           <li>
             <Link to="/dashboard">
-              <Dashboard /><span>Dashboard</span>
+              <Dashboard />
+              <span>Dashboard</span>
             </Link>
           </li>
           <li>
             <Link to="/travels">
-              <TripOrigin /><span>Travels</span>
+              <TripOrigin />
+              <span>Travels</span>
             </Link>
           </li>
           {/* <li>
@@ -61,22 +74,33 @@ function Sidebar() {
           </li> */}
           <li>
             <Link to="/drivers">
-              <DirectionsCar /><span>Drivers</span>
+              <DirectionsCar />
+              <span>Drivers</span>
             </Link>
           </li>
           <li>
             <Link to="/jeeps">
-              <Commute /><span>Jeeps</span>
+              <Commute />
+              <span>Jeeps</span>
             </Link>
           </li>
           <li>
+            <Link to="/schedule">
+              <DepartureBoard />
+              <span>Schedule</span>
+            </Link>
+          </li>
+
+          <li>
             <Link to="/status">
-              <DirectionsCar /><span>Status</span>
+              <DirectionsCar />
+              <span>Status</span>
             </Link>
           </li>
           <li>
             <Link to="/reports">
-              <Report /><span>Reports</span>
+              <Report />
+              <span>Reports</span>
             </Link>
           </li>
         </ul>
@@ -86,7 +110,8 @@ function Sidebar() {
         <ul>
           <li>
             <Link to="/settings">
-              <Settings /><span>Settings</span>
+              <Settings />
+              <span>Settings</span>
             </Link>
           </li>
           <li onClick={handleLogout}>
@@ -97,10 +122,10 @@ function Sidebar() {
         </ul>
       </div>
 
-      <LogoutModal 
-        isOpen={showLogoutModal} 
-        onConfirm={confirmLogout} 
-        onClose={closeModal} 
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onConfirm={confirmLogout}
+        onClose={closeModal}
       />
     </div>
   );

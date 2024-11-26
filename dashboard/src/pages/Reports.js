@@ -86,6 +86,7 @@ function Reports() {
               <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Seat Availability</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Route Direction</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Condition</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -98,6 +99,7 @@ function Reports() {
                 </TableCell>
                 <TableCell>{report.seatAvailability}</TableCell>
                 <TableCell>{report.routeDirection}</TableCell>
+                <TableCell>{report.condition}</TableCell>
                 <TableCell>
                   <IconButton
                     color={report.isRead ? "secondary" : "primary"}
