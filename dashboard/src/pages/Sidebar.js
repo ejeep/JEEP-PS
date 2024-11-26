@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Dashboard, DirectionsCar, People, Commute, Report, Settings, Logout, TripOrigin } from '@mui/icons-material';
+import { Menu, Dashboard, DirectionsCar, Commute, Report, Settings, Logout, TripOrigin } from '@mui/icons-material';
 import './Sidebar.css';
 import LogoutModal from '../components/LogoutModal';
 
@@ -27,6 +27,9 @@ function Sidebar() {
     setShowLogoutModal(false);
   };
 
+  // Highlight active menu item based on current route
+  const isActive = (path) => location.pathname === path ? 'active' : '';
+
   if (location.pathname === '/') {
     return null;
   }
@@ -38,45 +41,46 @@ function Sidebar() {
           <Menu />
         </div>
         <div className="logo">
-          <h2>JEEP-PS</h2>
+          {isOpen ? <h2>JEEP-PS</h2> : <img src="/logo.png" alt="Logo" className="sidebar-logo" />}
         </div>
       </div>
 
       <div className="sidebar-menu">
         <ul>
-          <li>
+          <li className={isActive('/dashboard')}>
             <Link to="/dashboard">
-              <Dashboard /><span>Dashboard</span>
+              <Dashboard />
+              <span>Dashboard</span>
             </Link>
           </li>
-          <li>
+          <li className={isActive('/travels')}>
             <Link to="/travels">
-              <TripOrigin /><span>Travels</span>
+              <TripOrigin />
+              <span>Travels</span>
             </Link>
           </li>
-          {/* <li>
-            <Link to="/clients">
-              <People /><span>Clients</span>
-            </Link>
-          </li> */}
-          <li>
+          <li className={isActive('/drivers')}>
             <Link to="/drivers">
-              <DirectionsCar /><span>Drivers</span>
+              <DirectionsCar />
+              <span>Drivers</span>
             </Link>
           </li>
-          <li>
+          <li className={isActive('/jeeps')}>
             <Link to="/jeeps">
-              <Commute /><span>Jeeps</span>
+              <Commute />
+              <span>Jeeps</span>
             </Link>
           </li>
-          <li>
+          <li className={isActive('/status')}>
             <Link to="/status">
-              <DirectionsCar /><span>Status</span>
+              <DirectionsCar />
+              <span>Status</span>
             </Link>
           </li>
-          <li>
+          <li className={isActive('/reports')}>
             <Link to="/reports">
-              <Report /><span>Reports</span>
+              <Report />
+              <span>Reports</span>
             </Link>
           </li>
         </ul>
@@ -84,14 +88,14 @@ function Sidebar() {
 
       <div className="sidebar-footer">
         <ul>
-          <li>
+          <li className={isActive('/settings')}>
             <Link to="/settings">
-              <Settings /><span>Settings</span>
+              <Settings />
+              <span>Settings</span>
             </Link>
           </li>
           <li onClick={handleLogout}>
             <Logout />
-            {/* Hide the text when sidebar is collapsed */}
             {isOpen && <span>Logout</span>}
           </li>
         </ul>
