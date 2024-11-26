@@ -4,7 +4,6 @@ import {
   Menu,
   Dashboard,
   DirectionsCar,
-  People,
   Commute,
   Report,
   Settings,
@@ -55,34 +54,26 @@ function Sidebar() {
 
       <div className="sidebar-menu">
         <ul>
-          <li className={isActive('/dashboard')}>
+          <li>
             <Link to="/dashboard">
               <Dashboard />
               <span>Dashboard</span>
-              <Dashboard />
-              <span>Dashboard</span>
             </Link>
           </li>
-          <li className={isActive('/travels')}>
+          <li>
             <Link to="/travels">
               <TripOrigin />
               <span>Travels</span>
-              <TripOrigin />
-              <span>Travels</span>
             </Link>
           </li>
-          <li className={isActive('/drivers')}>
+          <li>
             <Link to="/drivers">
               <DirectionsCar />
               <span>Drivers</span>
-              <DirectionsCar />
-              <span>Drivers</span>
             </Link>
           </li>
-          <li className={isActive('/jeeps')}>
+          <li>
             <Link to="/jeeps">
-              <Commute />
-              <span>Jeeps</span>
               <Commute />
               <span>Jeeps</span>
             </Link>
@@ -93,19 +84,14 @@ function Sidebar() {
               <span>Schedule</span>
             </Link>
           </li>
-
           <li>
             <Link to="/status">
               <DirectionsCar />
               <span>Status</span>
-              <DirectionsCar />
-              <span>Status</span>
             </Link>
           </li>
-          <li className={isActive('/reports')}>
+          <li>
             <Link to="/reports">
-              <Report />
-              <span>Reports</span>
               <Report />
               <span>Reports</span>
             </Link>
@@ -115,10 +101,8 @@ function Sidebar() {
 
       <div className="sidebar-footer">
         <ul>
-          <li className={isActive('/settings')}>
+          <li>
             <Link to="/settings">
-              <Settings />
-              <span>Settings</span>
               <Settings />
               <span>Settings</span>
             </Link>
