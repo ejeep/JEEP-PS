@@ -1,10 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   FaBars,
   FaTachometerAlt,
   FaBusAlt,
-  FaUserAlt,
   FaExclamationCircle,
   FaCogs,
   FaSignOutAlt,
@@ -12,44 +11,40 @@ import {
 import "./ManagementSidebar.css";
 
 function ManagementSidebar() {
+  const location = useLocation(); // Track current route
+
   const menuItems = [
     { to: "/management/dashboard", icon: <FaTachometerAlt />, label: "Dashboard" },
     { to: "/management/travels", icon: <FaBusAlt />, label: "Travels" },
-    { to: "/management/drivers", icon: <FaUserAlt />, label: "Drivers" },
     { to: "/management/status", icon: <FaBusAlt />, label: "Status" },
     { to: "/management/reports", icon: <FaExclamationCircle />, label: "Reports" },
+    { to: "/management/settings", icon: <FaCogs />, label: "Settings" },
+    { to: "/login", icon: <FaSignOutAlt />, label: "Logout" },
   ];
 
+  const isActive = (path) => location.pathname === path ? "active" : ""; // Check if the route matches
+
   return (
-    <div className="management-sidebar">
+    <div className="sidebar">
       {/* Header */}
-      <h2>
-        <FaBars /> JEEP-PS
-      </h2>
+      <div className="sidebar-header">
+        <div className="toggle-icon">
+          <FaBars />
+        </div>
+        <h2>JEEP-PS</h2>
+      </div>
 
       {/* Menu */}
-      <ul>
-        {menuItems.map((item, index) => (
-          <li key={index}>
-            <Link to={item.to}>
-              {item.icon} <span>{item.label}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      {/* Footer */}
-      <div className="footer">
-        <li className="settings">
-          <Link to="/management/settings">
-            <FaCogs /> <span>Settings</span>
-          </Link>
-        </li>
-        <li>
-          <Link to="/login">
-            <FaSignOutAlt /> <span>Logout</span>
-          </Link>
-        </li>
+      <div className="sidebar-menu">
+        <ul>
+          {menuItems.map((item, index) => (
+            <li key={index} className={isActive(item.to)}>
+              <Link to={item.to}>
+                {item.icon} <span>{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

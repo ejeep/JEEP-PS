@@ -49,37 +49,40 @@ function Sidebar() {
           <Menu />
         </div>
         <div className="logo">
-          <h2>JEEP-PS</h2>
+          {isOpen ? <h2>JEEP-PS</h2> : <img src="/logo.png" alt="Logo" className="sidebar-logo" />}
         </div>
       </div>
 
       <div className="sidebar-menu">
         <ul>
-          <li>
+          <li className={isActive('/dashboard')}>
             <Link to="/dashboard">
+              <Dashboard />
+              <span>Dashboard</span>
               <Dashboard />
               <span>Dashboard</span>
             </Link>
           </li>
-          <li>
+          <li className={isActive('/travels')}>
             <Link to="/travels">
+              <TripOrigin />
+              <span>Travels</span>
               <TripOrigin />
               <span>Travels</span>
             </Link>
           </li>
-          {/* <li>
-            <Link to="/clients">
-              <People /><span>Clients</span>
-            </Link>
-          </li> */}
-          <li>
+          <li className={isActive('/drivers')}>
             <Link to="/drivers">
+              <DirectionsCar />
+              <span>Drivers</span>
               <DirectionsCar />
               <span>Drivers</span>
             </Link>
           </li>
-          <li>
+          <li className={isActive('/jeeps')}>
             <Link to="/jeeps">
+              <Commute />
+              <span>Jeeps</span>
               <Commute />
               <span>Jeeps</span>
             </Link>
@@ -95,10 +98,14 @@ function Sidebar() {
             <Link to="/status">
               <DirectionsCar />
               <span>Status</span>
+              <DirectionsCar />
+              <span>Status</span>
             </Link>
           </li>
-          <li>
+          <li className={isActive('/reports')}>
             <Link to="/reports">
+              <Report />
+              <span>Reports</span>
               <Report />
               <span>Reports</span>
             </Link>
@@ -108,15 +115,16 @@ function Sidebar() {
 
       <div className="sidebar-footer">
         <ul>
-          <li>
+          <li className={isActive('/settings')}>
             <Link to="/settings">
+              <Settings />
+              <span>Settings</span>
               <Settings />
               <span>Settings</span>
             </Link>
           </li>
           <li onClick={handleLogout}>
             <Logout />
-            {/* Hide the text when sidebar is collapsed */}
             {isOpen && <span>Logout</span>}
           </li>
         </ul>

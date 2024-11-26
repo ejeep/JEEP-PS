@@ -1,67 +1,100 @@
-/* General list item styling */
-.management-sidebar li {
+/* General Styles */
+.sidebar {
+    height: 100vh;
+    width: 250px;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden; /* Prevent scrollbars */
+    transition: all 0.3s ease-in-out;
+  }
+  
+  /* Sidebar Header */
+  .sidebar-header {
     display: flex;
     align-items: center;
-    padding: 15px; /* Standard padding */
-    margin: 5px; /* Consistent spacing */
-    border-radius: 8px; /* Soft rounded corners */
-    transition: background-color 0.3s ease-in-out; /* Smooth background transitions */
-    cursor: pointer; /* Pointer for better interactivity */
-}
-
-/* Hover effect (applies only to the button, not the text) */
-.management-sidebar li:hover {
-    background-color: #c7f9cc; /* Soft green hover background */
-}
-
-/* Link Styling */
-.management-sidebar li a {
-    text-decoration: none; /* No underline */
-    color: #333; /* Neutral text color */
+    padding: 15px;
+    background-color: #28a745;
+    color: white;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 24px;
+    margin-left: 10px;
+  }
+  
+  .sidebar-header .toggle-icon {
+    cursor: pointer;
+  }
+  
+  /* Menu Items */
+  .sidebar-menu ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .sidebar-menu li {
     display: flex;
     align-items: center;
-    font-size: 1rem;
-    font-family: 'Poppins', sans-serif; /* Match font style */
-    width: 100%; /* Full width clickable */
-    padding: 0; /* Remove internal padding for links */
-}
-
-/* Prevent text or icon highlight on hover */
-.management-sidebar li a:hover {
-    color: inherit; /* Keep text color consistent on hover */
-    background: none; /* Remove any background highlight */
-}
-
-/* Link Icon Styling */
-.management-sidebar li a svg {
-    font-size: 1.5rem; /* Larger icon size */
-    margin-right: 12px; /* Space between icon and text */
-}
-
-/* Footer Styling */
-.management-sidebar .footer li {
-    padding: 15px; /* Standard padding */
-    margin: 5px; /* Same spacing as menu items */
-    border-radius: 8px; /* Rounded corners consistent with menu */
-}
-
-/* Footer hover effect (inherits general li:hover styles) */
-.management-sidebar .footer li:hover {
-    background-color: #c7f9cc; /* Same soft green background */
-}
-
-/* Footer Links */
-.management-sidebar .footer li a {
-    color: #333; /* Neutral text color for footer links */
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    width: 100%;
+    padding: 15px;
+    cursor: pointer;
+    border-radius: 8px;
+    margin: 5px;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+  
+  .sidebar-menu li a {
     text-decoration: none;
-}
-
-/* Icons in Footer */
-.management-sidebar .footer li a svg {
-    font-size: 1.5rem; /* Match icon size */
-    margin-right: 12px; /* Same spacing */
-}
+    color: #333;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    width: 100%;
+  }
+  
+  .sidebar-menu li:hover {
+    background-color: #c7f9cc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidebar-menu li a span {
+    margin-left: 12px;
+  }
+  
+  .sidebar-menu li a svg {
+    font-size: 1.5rem;
+  }
+  
+  /* Active Menu Item */
+  .sidebar-menu li.active {
+    background-color: #9bdfac; /* Green background for active state */
+    color: white; /* White text for active state */
+    font-weight: bold;
+  }
+  
+  /* Collapsed State */
+  .sidebar.collapsed {
+    width: 80px;
+  }
+  
+  .sidebar.collapsed .sidebar-menu li a span {
+    display: none;
+  }
+  
+  .sidebar.collapsed .sidebar-menu li a {
+    justify-content: center;
+  }
+  
+  .sidebar.collapsed .sidebar-header h2 {
+    display: none;
+  }
+  
+  /* Prevent Scrollbars */
+  .sidebar {
+    overflow: hidden;
+  }
+  

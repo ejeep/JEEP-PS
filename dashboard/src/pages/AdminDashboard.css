@@ -1,23 +1,17 @@
-/* AdminDashboard.css */
-.recent-activity {
-  padding: 16px;
-  margin-top: 16px;
-  border-radius: 8px;
-  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
-  background-color: #fff;
+/* Prevent scroll on page load */
+body {
+  overflow-y: hidden;
 }
 
-.recent-activity ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+/* General improvements */
+.MuiTypography-h6 {
+  font-weight: bold;
 }
 
-.recent-activity li {
-  padding: 8px 0;
-  border-bottom: 1px solid #e0e0e0;
+.MuiButton-contained {
+  transition: background-color 0.3s ease;
 }
 
-.recent-activity li:last-child {
-  border-bottom: none;
+.MuiButton-contained:hover {
+  background-color: #3e8e41;
 }
