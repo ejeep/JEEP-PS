@@ -21,12 +21,14 @@ exports.commuterLocation = async (req, res) => {
     const { commuterLocation } = req.body;
     if (commuterLocation.longitude === undefined || commuterLocation.latitude === undefined) {
       return res.status(400).json({ message: "Longitude and Latitude are required." });
-  }
-    const newLocation = new CommuterLocation({  commuterLocation: {
-      latitude: commuterLocation.latitude,
-      longitude: commuterLocation.longitude,
-      timestamp: new Date(), // Set the current timestamp
-    }, });
+    }
+    const newLocation = new CommuterLocation({  
+      commuterLocation: {
+        latitude: commuterLocation.latitude,
+        longitude: commuterLocation.longitude,
+        timestamp: new Date(), // Set the current timestamp
+      }, 
+    });
     await newLocation.save();
 
     res.status(201).json({ message: "Location saved successfully." });
@@ -35,6 +37,8 @@ exports.commuterLocation = async (req, res) => {
     res.status(500).json({ message: "Error saving location." });
   }
 };
+
+// Create Location (for Jeep)
 exports.createLocation = async (req, res) => {
   try {
     console.log(req.body); // Log the incoming request body for debugging
@@ -70,7 +74,6 @@ exports.createLocation = async (req, res) => {
   }
 };
 
-
 // Retrieve all location entries
 exports.getAllLocations = async (req, res) => {
   try {
@@ -102,55 +105,25 @@ exports.getLocationById = async (req, res) => {
   }
 };
 
-// Update a location entry
-exports.updateLocationWithETA = async (req, res) => {
-  const { jeepLocation, timestamp } = req.body;
+// Update a location entry (no plateNumber)
+exports.updateLocation = async (req, res) => {
+  const { jeepID } = req.params;
+  const { jeepLocation, speed, seatAvailability, status, direction, condition } = req.body;
 
   try {
-    // Fetch the commuter's location from the database
-    const commuter = await CommuterLocation.findOne().sort({ timestamp: -1 }); // Fetch the latest commuter location
-
-    if (!commuter) {
-      return res.status(404).json({ message: "Commuter location not found." });
-    }
-
-    const commuterLocation = commuter.commuterLocation;
-
-    // Calculate the distance between the jeep and the commuter
-    const distance = haversineDistance(
-      jeepLocation.lat,
-      jeepLocation.lng,
-      commuterLocation.latitude,
-      commuterLocation.longitude
+    const location = await Location.findOneAndUpdate(
+      { jeepID }, // Find by jeepID
+      { jeepLocation, speed, seatAvailability, status, direction, condition }, // Update fields
+      { new: true } // Return the updated document
     );
 
-    // Assume an average speed in m/s (e.g., 10 m/s or ~36 km/h)
-    const speed = 10;
+    if (!location) {
+      return res.status(404).json({ message: "Location not found." });
+    }
 
-    // Calculate ETA in seconds
-    const etaInSeconds = distance / speed;
-
-    // Convert ETA to minutes for better readability
-    const etaInMinutes = (etaInSeconds / 60).toFixed(2);
-
-    // Save the data, including ETA, into the database
-    const newLocation = new Location({
-      jeepLocation,
-      timestamp: timestamp ? new Date(timestamp) : Date.now(),
-      eta: etaInMinutes,
-    });
-
-    await newLocation.save();
-
-    res.status(201).json({
-      message: "Location and ETA saved successfully.",
-      eta: etaInMinutes + " minutes",
-      distance: (distance / 1000).toFixed(2) + " km", // Display distance in kilometers
-    });
+    res.status(200).json({ message: "Location updated successfully.", location });
   } catch (error) {
-    console.error("Error calculating ETA:", error);
-    res.status(500).json({ error: "Failed to calculate ETA." });
+    console.error("Error updating location:", error);
+    res.status(500).json({ error: "Failed to update location." });
   }
 };
-
-

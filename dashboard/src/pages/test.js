@@ -1,128 +1,206 @@
-// src/pages/Travel.js
 import React, { useState, useEffect } from "react";
-import { Box, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { Box, Grid, Typography, Card } from "@mui/material";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import BuildIcon from "@mui/icons-material/Build";
+import DriveEtaIcon from "@mui/icons-material/DriveEta";
+import { styled } from "@mui/system";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import './Travels.css'; // Import the CSS file for additional styling
 
-const LoginButton = styled(Button)(({ theme }) => ({
-  backgroundColor: "#ffffff",
-  color: "#28a745",
-  position: "absolute",
-  top: "20px",
-  right: "20px",
-  zIndex: 1000,
-  padding: theme.spacing(1.5, 3),
-  borderRadius: "20px",
-  fontWeight: "bold",
-  [theme.breakpoints.down("sm")]: {
-    bottom: "20px",
-    right: "50%",
-    transform: "translateX(50%)",
-    width: "90%",
-  },
+// Fix for missing marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+const DashboardContainer = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(4),
+  minHeight: "100vh",
+  backgroundColor: "#f5f5f5",
 }));
 
-function Travel() {
-  const [jeeps, setJeeps] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+const DashboardCard = styled(Card)(({ theme }) => ({
+  backgroundColor: "#28a745",
+  color: "#fff",
+  textAlign: "center",
+  padding: theme.spacing(2),
+  borderRadius: "12px",
+  boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+}));
 
-  // Fetch jeep data from the backend API
+
+const StatusContainer = styled(Box)(({ theme }) => ({
+  backgroundColor: "#ffffff",
+  border: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(2),
+  height: "100%",
+  borderRadius: "12px",
+  boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+  overflowY: "auto",
+  maxHeight: "450px", // Prevent excessive height
+}));
+
+function AdminDashboard() {
+  const [jeepLocations, setJeepLocations] = useState([]);
+  const [selectedJeep, setSelectedJeep] = useState(null);
+
+  // Fetch jeep location data from API
+  const fetchJeepLocations = async () => {
+    try {
+      const response = await axios.get("http://localhost:3004/gps/locations");
+      setJeepLocations(response.data); // Assuming the API returns an array of jeep location data
+    } catch (error) {
+      console.error("Error fetching jeep locations:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const jeepsResponse = await axios.get("http://localhost:3004/jeep-data/jeeps");
+    fetchJeepLocations();
 
-        // Set jeeps data with relevant fields (plate number, direction, status)
-        setJeeps(jeepsResponse.data.map((jeep) => ({
-          id: jeep.id,
-          plateNumber: jeep.plateNumber,
-          routeDirection: jeep.routeDirection,
-          status: jeep.status || "Waiting" // Default status to "Waiting" if not set
-        })));
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load data.");
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // Optionally, poll the API every few seconds for real-time updates
+    const interval = setInterval(fetchJeepLocations, 600000); // Update every 10 minutes
+    return () => clearInterval(interval); // Cleanup interval on component unmount
   }, []);
 
-  // Render the jeeps based on their direction (North/South Bound)
-  const renderJeeps = (direction) =>
-    jeeps
-      .filter((jeep) => jeep.routeDirection === direction)
-      .map((jeep, index) => (
-        <TableRow key={jeep.id}>
-          <TableCell>{jeep.plateNumber}</TableCell>
-          <TableCell>{jeep.routeDirection}</TableCell>
-          <TableCell>{jeep.status}</TableCell>
-        </TableRow>
-      ));
+  const handleJeepClick = (jeep) => {
+    setSelectedJeep(jeep);
+  };
 
-  if (loading) {
-    return <Typography variant="h6" align="center">Loading...</Typography>;
-  }
+  // Count the jeeps based on their status
+  const countStatus = (status) =>
+    jeepLocations.filter((jeep) => jeep.status === status).length;
 
-  if (error) {
-    return <Typography variant="h6" align="center" color="error">{error}</Typography>;
-  }
+  // Filter out jeeps that are "broken" or "on maintenance"
+  const filteredJeepLocations = jeepLocations.filter(
+    (jeep) => jeep.condition !== "broken" && jeep.condition !== "maintenance"
+  );
 
   return (
-    <Box sx={{ padding: 4 }}>
-      <Typography variant="h4" gutterBottom align="center">
-        Travel Display Information
-      </Typography>
-      <LoginButton variant="outlined" onClick={() => navigate("/login")}>
-        Login
-      </LoginButton>
-      <Grid container spacing={4} justifyContent="center">
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6" align="center" gutterBottom>
-            North Bound
-          </Typography>
-          <TableContainer component={Paper} className="table-container">
-            <Table>
-              <TableHead>
-                <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {renderJeeps("North Bound")}
-              </TableBody>
-            </Table>
-          </TableContainer>
+    <DashboardContainer>
+      {/* Summary Cards */}
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard>
+            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
+              <DirectionsBusIcon /> Total Jeeps
+            </Typography>
+            <Typography variant="h4">{jeepLocations.length}</Typography>
+          </DashboardCard>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6" align="center" gutterBottom>
-            South Bound
-          </Typography>
-          <TableContainer component={Paper} className="table-container">
-            <Table>
-              <TableHead>
-                <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {renderJeeps("South Bound")}
-              </TableBody>
-            </Table>
-          </TableContainer>
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard>
+            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
+              <DriveEtaIcon /> En Route
+            </Typography>
+            <Typography variant="h4">{countStatus("en route")}</Typography>
+          </DashboardCard>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard>
+            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
+              <HourglassEmptyIcon /> Waiting
+            </Typography>
+            <Typography variant="h4">{countStatus("waiting")}</Typography>
+          </DashboardCard>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard>
+            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
+              <BuildIcon /> Maintenance
+            </Typography>
+            <Typography variant="h4">{countStatus("maintenance")}</Typography>
+          </DashboardCard>
         </Grid>
       </Grid>
-    </Box>
+
+      {/* Jeep Information and Map */}
+      <Grid container spacing={2} marginTop={2}>
+        <Grid item xs={12} md={3}>
+          <StatusContainer>
+            <Typography variant="h6" gutterBottom>
+              Jeep Information
+            </Typography>
+            {selectedJeep ? (
+              <>
+                <Typography>Jeep ID: {selectedJeep.jeepID}</Typography>
+                <Typography>
+                  Available Seats: {selectedJeep.seatAvailability}
+                </Typography>
+                <Typography>Status: {selectedJeep.status}</Typography>
+                <Typography>Direction: {selectedJeep.direction}</Typography>
+                <Typography>Condition: {selectedJeep.condition}</Typography>
+                <Typography>
+                  Last Updated:{" "}
+                  {new Date(selectedJeep.timestamp).toLocaleString()}
+                </Typography>
+              </>
+            ) : (
+              <Typography variant="body2">
+                {" "}
+                Click on a marker on the map to view details about the selected
+                jeepney.
+              </Typography>
+            )}
+          </StatusContainer>
+        </Grid>
+        <Grid item xs={12} md={9}>
+          <MapContainer
+            center={[16.4939, 121.1128]}
+            zoom={13}
+            style={{
+              height: "475px",
+              width: "100%",
+              borderRadius: "12px",
+              overflow: "hidden",
+            }}
+          >
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            {filteredJeepLocations.map((jeep, index) => (
+              <Marker
+                key={index}
+                position={[jeep.jeepLocation.lat, jeep.jeepLocation.lng]}
+                eventHandlers={{
+                  click: () => handleJeepClick(jeep),
+                }}
+              >
+                <Popup>
+                  <Box>
+                    <Typography variant="subtitle1">
+                      <strong>Jeep ID:</strong> {jeep.jeepID}
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      <strong>Available Seats:</strong> {jeep.seatAvailability}
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      <strong>Status:</strong> {jeep.status}
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      <strong>Direction:</strong> {jeep.direction}
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      <strong>Condition:</strong> {jeep.condition}
+                    </Typography>
+                    <Typography variant="caption">
+                      <strong>Last Updated:</strong>{" "}
+                      {new Date(jeep.timestamp).toLocaleString()}
+                    </Typography>
+                  </Box>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </Grid>
+      </Grid>
+    </DashboardContainer>
   );
 }
 
-export default Travel;
+export default AdminDashboard;

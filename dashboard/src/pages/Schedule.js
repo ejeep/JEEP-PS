@@ -7,7 +7,6 @@ import {
   IconButton,
   Modal,
   TextField,
-  MenuItem,
   Typography,
   Snackbar,
   Dialog,
@@ -16,7 +15,7 @@ import {
   DialogTitle,
   Alert,
 } from "@mui/material";
-import { Edit, Delete, Add, Search } from "@mui/icons-material";
+import {Delete, Search } from "@mui/icons-material";
 import axios from "axios";
 import { DataGrid } from "@mui/x-data-grid"; // Import DataGrid
 import "./Jeeps.css";
@@ -24,21 +23,10 @@ import "./Jeeps.css";
 const API_BASE_URL = "http://localhost:3004";
 
 function Schedule() {
-  const [openModal, setOpenModal] = useState(false);
   const [openScheduleModal, setOpenScheduleModal] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // New state for delete confirmation dialog
-  const [isEdit, setIsEdit] = useState(false);
-  const [selectedJeep, setSelectedJeep] = useState(null);
-  const [formData, setFormData] = useState({
-    plateNumber: "",
-    model: "",
-    route: "",
-    routeDirection: "North Bound",
-    timeSchedule: "",
-  });
+  const [selectedJeep, setSelectedJeep] = useState(null);  
   const [jeeps, setJeeps] = useState([]);
-  const [drivers, setDrivers] = useState([]);
-  const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -59,7 +47,6 @@ function Schedule() {
 
   useEffect(() => {
     fetchJeeps();
-    fetchDrivers();
   }, []);
 
   const fetchJeeps = async () => {
@@ -72,14 +59,6 @@ function Schedule() {
     }
   };
 
-  const fetchDrivers = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/driver-data/drivers`);
-      setDrivers(response.data);
-    } catch (error) {
-      handleError("Error fetching drivers");
-    }
-  };
 
   const handleError = (message) => {
     setSnackbarMessage(message);
@@ -97,19 +76,6 @@ function Schedule() {
     setOpenSnackbar(false);
   };
 
-  const handleOpenModal = () => {
-    setFormData({
-      plateNumber: "",
-      model: "",
-      route: "",
-      routeDirection: "North Bound",
-    });
-    setIsEdit(false);
-    setOpenModal(true);
-  };
-
-  const handleCloseModal = () => setOpenModal(false);
-
   const handleOpenDeleteDialog = (jeep) => {
     setSelectedJeep(jeep); // Save the jeep object to be deleted
     setOpenDeleteDialog(true); // Open the delete confirmation dialog
@@ -120,9 +86,6 @@ function Schedule() {
     setOpenDeleteDialog(false); // Close the delete confirmation dialog
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleOpenScheduleModal = (jeep) => {
     setSelectedJeep(jeep); // Set the selected jeep for the schedule modal
@@ -136,58 +99,41 @@ function Schedule() {
 
   const handleCloseScheduleModal = () => setOpenScheduleModal(false);
 
-  const handleEdit = async () => {
-    if (!selectedJeep) return handleError("No jeep selected for editing");
-
+  const handleRemoveSchedule = async () => {
+    if (!selectedJeep) return; // Check if a jeep is selected
+  
     try {
+      // Send PUT request to update the jeep's timeSchedule to an empty array
       const response = await axios.put(
         `${API_BASE_URL}/jeep-data/updateVehicle/${selectedJeep.plateNumber}`,
         {
-          route: formData.route,
-          routeDirection: formData.routeDirection,
-          timeSchedule: formData.timeSchedule,
+          timeSchedule: [],  // Clear the timeSchedule by setting it to an empty array
         }
       );
-
+  
       const updatedJeep = response.data;
+  
+      // Update the state to reflect the change in the jeep's schedule
       setJeeps((prevJeeps) =>
         prevJeeps.map((jeep) =>
           jeep.plateNumber === updatedJeep.plateNumber ? updatedJeep : jeep
         )
       );
-      handleCloseModal();
-    } catch (error) {
-      handleError("Error editing jeep");
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedJeep) return; // Check if a jeep is selected for deletion
-
-    try {
-      // Send DELETE request to remove the jeep from the database
-      await axios.delete(
-        `${API_BASE_URL}/jeep-data/deleteVehicle/${selectedJeep.plateNumber}`
-      );
-
-      // Update the state to remove the deleted jeep from the list
-      setJeeps((prevJeeps) =>
-        prevJeeps.filter(
-          (jeep) => jeep.plateNumber !== selectedJeep.plateNumber
-        )
-      );
+  
       setFilteredJeeps((prevFilteredJeeps) =>
-        prevFilteredJeeps.filter(
-          (jeep) => jeep.plateNumber !== selectedJeep.plateNumber
+        prevFilteredJeeps.map((jeep) =>
+          jeep.plateNumber === updatedJeep.plateNumber ? updatedJeep : jeep
         )
       );
-
-      // Close the dialog after successful deletion
+  
+      fetchJeeps();
       handleCloseDeleteDialog();
     } catch (error) {
-      handleError("Error deleting jeep");
+      handleError("Error removing jeep's schedule");
     }
   };
+  
+  
 
   const handleAssignSchedule = async () => {
     // Check if a jeep is selected and if the timeSchedule is provided
@@ -231,17 +177,6 @@ function Schedule() {
     }
   };
 
-  const handleOpenModalWithJeep = (jeep) => {
-    setSelectedJeep(jeep);
-    setFormData({
-      plateNumber: jeep.plateNumber,
-      model: jeep.model,
-      route: jeep.route,
-      routeDirection: jeep.routeDirection || "North Bound",
-    });
-    setIsEdit(true);
-    setOpenModal(true);
-  };
 
   const handleSearch = (e) => {
     const filteredJeeps = jeeps.filter((jeep) => {
@@ -257,12 +192,10 @@ function Schedule() {
     setFilteredJeeps(filteredJeeps);
   };
 
-  const activeDrivers = drivers.filter((driver) => driver.status === "Active");
 
   // Columns definition for the DataGrid
   const columns = [
     { field: "plateNumber", headerName: "Plate Number", width: 150 },
-    { field: "model", headerName: "Model", width: 150 },
     { field: "route", headerName: "Route", width: 200 },
     { field: "assignedDriver", headerName: "Assigned Driver", width: 250 },
     { field: "timeSchedule", headerName: "Schedule Time", width: 250 },
@@ -272,16 +205,7 @@ function Schedule() {
       width: 300,
       renderCell: (params) => (
         <>
-          <IconButton onClick={() => handleOpenModalWithJeep(params.row)}>
-            <Edit />
-          </IconButton>
-          <IconButton
-            onClick={() => handleOpenDeleteDialog(params.row.plateNumber)}
-            style={{ color: "#4CAF50" }}
-          >
-            <Delete />
-          </IconButton>
-          <Button
+        <Button
             variant="outlined" // Change to outlined to match theme
             onClick={() => handleOpenScheduleModal(params.row)}
             style={{
@@ -291,24 +215,21 @@ function Schedule() {
           >
             Assign Schedule
           </Button>
+          <IconButton
+            onClick={() => handleOpenDeleteDialog(params.row)}
+            style={{ color: "#4CAF50" }}
+          >
+            <Delete />
+          </IconButton>          
         </>
       ),
     },
   ];
 
-  // Rows for DataGrid (updated with dynamic data)
-  const rows = jeeps.map((jeep) => ({
-    id: jeep.plateNumber, // Using plateNumber as a unique id for each row
-    plateNumber: jeep.plateNumber,
-    model: jeep.model,
-    route: `${jeep.route}`,
-    assignedDriver: jeep.assignedDriver || "None",
-  }));
-
   return (
     <Box sx={{ padding: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
-        Schedule Assignment
+        Schedule Management
       </Typography>
 
       <Grid container justifyContent="space-between" alignItems="center">
@@ -337,83 +258,6 @@ function Schedule() {
           disableSelectionOnClick
         />
       </Paper>
-
-      {/* Jeep Modal */}
-      <Modal
-        open={openModal}
-        onClose={handleCloseModal}
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-      >
-        <Box sx={{ ...style, width: 400 }}>
-          <Typography id="modal-title" variant="h6" component="h2">
-            {"Edit Jeep"}
-          </Typography>
-          <TextField
-            label="Plate Number"
-            variant="outlined"
-            name="plateNumber"
-            fullWidth
-            value={formData.plateNumber}
-            onChange={handleChange}
-            disabled={isEdit}
-            style={{ marginBottom: "10px" }}
-          />
-          <TextField
-            label="Model"
-            variant="outlined"
-            name="model"
-            fullWidth
-            value={formData.model}
-            onChange={handleChange}
-            style={{ marginBottom: "10px" }}
-          />
-          <TextField
-            label="Route"
-            variant="outlined"
-            name="route"
-            fullWidth
-            value={formData.route}
-            onChange={handleChange}
-            style={{ marginBottom: "10px" }}
-          />
-          <TextField
-            label="Route Direction"
-            select
-            name="routeDirection"
-            fullWidth
-            value={formData.routeDirection}
-            onChange={handleChange}
-            style={{ marginBottom: "20px" }}
-          >
-            <MenuItem value="North Bound">North Bound</MenuItem>
-            <MenuItem value="South Bound">South Bound</MenuItem>
-          </TextField>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Button
-              onClick={handleCloseModal}
-              style={{
-                width: "48%",
-                backgroundColor: "#fff", // Green background
-                color: "#4CAF50",
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleEdit}
-              style={{
-                width: "48%",
-                backgroundColor: "#4CAF50", // Green background
-                color: "#fff",
-              }}
-            >
-              {"Save Changes"}
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
 
       <Modal
         open={openScheduleModal}
@@ -469,7 +313,7 @@ function Schedule() {
         <DialogTitle id="delete-dialog-title">{"Confirm Deletion"}</DialogTitle>
         <DialogContent>
           <Typography variant="body1">
-            Are you sure you want to delete this jeep?
+            Are you sure you want to clear schedule?
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -483,7 +327,7 @@ function Schedule() {
             Cancel
           </Button>
           <Button
-            onClick={handleDelete} // Trigger delete function on confirmation
+            onClick={handleRemoveSchedule} // Trigger delete function on confirmation
             style={{
               backgroundColor: "#4CAF50", // Green background for Assign Driver
               color: "#fff", // White text

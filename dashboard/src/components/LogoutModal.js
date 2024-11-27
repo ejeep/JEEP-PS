@@ -1,25 +1,53 @@
+// src/components/LogoutModal.js
 import React from "react";
-import "./LogoutModal.css";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
+} from "@mui/material";
 
-const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
-  if (!isOpen) return null; // Don't render if the modal is not open
-
+function LogoutModal({ isOpen, onConfirm, onClose }) {
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h2>Confirm Logout</h2>
-        <p>Are you sure you want to logout?</p>
-        <div className="modal-actions">
-          <button onClick={onConfirm} className="confirm-button">
-            Yes
-          </button>
-          <button onClick={onClose} className="cancel-button">
-            No
-          </button>
-        </div>
-      </div>
-    </div>
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      aria-labelledby="logout-modal-title"
+      aria-describedby="logout-modal-description"
+    >
+      <DialogTitle id="logout-modal-title">Confirm Logout</DialogTitle>
+      <DialogContent>
+        <DialogContentText id="logout-modal-description">
+          Are you sure you want to log out?
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={onClose}
+          style={{
+            width: "48%",
+            backgroundColor: "#fff", // Green background
+            color: "#4CAF50",
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={onConfirm}
+          style={{
+            width: "48%",
+            backgroundColor: "#4CAF50", // Green background
+            color: "#fff",
+          }}
+          variant="contained"
+        >
+          Logout
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
-};
+}
 
 export default LogoutModal;

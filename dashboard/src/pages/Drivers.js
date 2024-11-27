@@ -257,7 +257,7 @@ function Drivers() {
   return (
     <Box sx={{ padding: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
-        Manage Drivers
+        Driver Management
       </Typography>
 
       <Grid container justifyContent="space-between" alignItems="center">

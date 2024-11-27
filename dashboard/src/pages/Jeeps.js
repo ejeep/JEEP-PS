@@ -158,6 +158,7 @@ function Jeeps() {
           jeep.plateNumber === updatedJeep.plateNumber ? updatedJeep : jeep
         )
       );
+      fetchJeeps();
       handleCloseModal();
     } catch (error) {
       handleError("Error editing jeep");
@@ -227,7 +228,7 @@ function Jeeps() {
           jeep.plateNumber === updatedJeep.plateNumber ? updatedJeep : jeep
         )
       );
-
+      fetchJeeps();
       handleCloseDriverModal();
     } catch (error) {
       handleError("Error assigning driver");
@@ -311,7 +312,7 @@ function Jeeps() {
   return (
     <Box sx={{ padding: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
-        Manage Jeeps
+        Vehicle Management
       </Typography>
 
       <Grid container justifyContent="space-between" alignItems="center">
@@ -378,6 +379,7 @@ function Jeeps() {
             fullWidth
             value={formData.model}
             onChange={handleChange}
+            disabled={isEdit}
             style={{ marginBottom: "10px" }}
           />
           <TextField

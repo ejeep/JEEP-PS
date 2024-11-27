@@ -1,11 +1,25 @@
-// src/pages/Travel.js
 import React, { useState, useEffect } from "react";
-import { Box, Grid, Paper, Table, Button, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import { styled } from "@mui/system";
+import {
+  Box,
+  Grid,
+  Paper,
+  Table,
+  Button,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+  Switch,
+} from "@mui/material";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import './Travels.css'; // Import the CSS file for additional styling
 import debounce from "lodash.debounce";
+import { styled } from "@mui/system";
+import { useNavigate } from "react-router-dom";
+import "leaflet/dist/leaflet.css";
+
 const LoginButton = styled(Button)(({ theme }) => ({
   backgroundColor: "#ffffff",
   color: "#28a745",
@@ -28,22 +42,17 @@ function Main() {
   const [jeeps, setJeeps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewMap, setViewMap] = useState(false); // Toggle between views
+  const [commuterLocation, setCommuterLocation] = useState(null);
+  const [selectedJeep, setSelectedJeep] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch jeep data from the backend API
+  // Fetch jeep data
   useEffect(() => {
     const fetchData = async () => {
       try {
         const jeepsResponse = await axios.get("http://localhost:3004/jeep-data/jeeps");
-
-        // Set jeeps data with relevant fields (plate number, direction, status)
-        setJeeps(jeepsResponse.data.map((jeep) => ({
-          id: jeep.id,
-          plateNumber: jeep.plateNumber,
-          routeDirection: jeep.routeDirection,
-          status: jeep.status || "Waiting", // Default status to "Waiting" if not set
-          timeSchedule: jeep.timeSchedule
-        })));
+        setJeeps(jeepsResponse.data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -53,7 +62,7 @@ function Main() {
     };
 
     fetchData();
-    getCommuterLocation(); // Call to get commuter location
+    getCommuterLocation(); // Get commuter location on component mount
   }, []);
 
   // Function to get commuter's location
@@ -89,11 +98,16 @@ function Main() {
     }
   }, 60000);
 
-  // Render the jeeps based on their direction (North/South Bound)
+  // Handle click on a jeep marker
+  const handleJeepClick = (jeep) => {
+    setSelectedJeep(jeep);
+  };
+
+  // Render jeeps in table based on direction
   const renderJeeps = (direction) =>
     jeeps
       .filter((jeep) => jeep.routeDirection === direction)
-      .map((jeep, index) => (
+      .map((jeep) => (
         <TableRow key={jeep.id}>
           <TableCell>{jeep.plateNumber}</TableCell>
           <TableCell>{jeep.routeDirection}</TableCell>
@@ -113,55 +127,115 @@ function Main() {
   return (
     <Box sx={{ padding: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
-        Travel Display Information
+        {viewMap ? "Jeep Information and Map" : "Travel Display Information"}
       </Typography>
+
       <LoginButton variant="outlined" onClick={() => navigate("/login")}>
         Login
       </LoginButton>
-      <Grid container spacing={4} justifyContent="center">
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6" align="center" gutterBottom>
-            North Bound
-          </Typography>
-          <TableContainer component={Paper} className="table-container">
-            <Table>
-              <TableHead>
-                <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>                  
-                  <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Status</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Departure Time</TableCell>
-                  <TableCell style={{ color: "#fff" }}>ETA</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {renderJeeps("North Bound")}
-              </TableBody>
-            </Table>
-          </TableContainer>
+
+      <Box display="flex" justifyContent="center" alignItems="center" mb={2}>
+        <Typography>Travel Display</Typography>
+        <Switch
+          checked={viewMap}
+          onChange={() => setViewMap(!viewMap)}
+          color="primary"
+        />
+        <Typography>Jeep Map</Typography>
+      </Box>
+
+      {viewMap ? (
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={3}>
+            <Box p={2} border={1} borderRadius={2}>
+              <Typography variant="h6" gutterBottom>
+                Jeep Information
+              </Typography>
+              {selectedJeep ? (
+                <>
+                  <Typography>Jeep ID: {selectedJeep.jeepID}</Typography>
+                  <Typography>Available Seats: {selectedJeep.seatAvailability}</Typography>
+                  <Typography>Status: {selectedJeep.status}</Typography>
+                  <Typography>Direction: {selectedJeep.direction}</Typography>
+                  <Typography>Condition: {selectedJeep.condition}</Typography>
+                  <Typography>
+                    Last Updated: {new Date(selectedJeep.timestamp).toLocaleString()}
+                  </Typography>
+                </>
+              ) : (
+                <Typography>Select a marker to view jeep details.</Typography>
+              )}
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={9}>
+            <MapContainer
+              center={commuterLocation || [16.4939, 121.1128]}
+              zoom={13}
+              style={{ height: "475px", width: "100%", borderRadius: "12px" }}
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {commuterLocation && (
+                <Marker position={commuterLocation}>
+                  <Popup>Your Location</Popup>
+                </Marker>
+              )}
+              {jeeps.map((jeep, index) => (
+                <Marker
+                  key={index}
+                  position={[jeep.jeepLocation.lat, jeep.jeepLocation.lng]}
+                  eventHandlers={{
+                    click: () => handleJeepClick(jeep),
+                  }}
+                >
+                  <Popup>
+                    <Typography><strong>Jeep ID:</strong> {jeep.jeepID}</Typography>
+                    <Typography><strong>Status:</strong> {jeep.status}</Typography>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6" align="center" gutterBottom>
-            South Bound
-          </Typography>
-          <TableContainer component={Paper} className="table-container">
-            <Table>
-              <TableHead>
-                <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>                  
-                  <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Status</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Departure Time</TableCell>
-                  <TableCell style={{ color: "#fff" }}>ETA</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {renderJeeps("South Bound")}
-              </TableBody>
-            </Table>
-          </TableContainer>
+      ) : (
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" align="center" gutterBottom>
+              North Bound
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Plate Number</TableCell>
+                    <TableCell>Route Direction</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Departure Time</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>{renderJeeps("North Bound")}</TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" align="center" gutterBottom>
+              South Bound
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Plate Number</TableCell>
+                    <TableCell>Route Direction</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Departure Time</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>{renderJeeps("South Bound")}</TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
     </Box>
   );
 }

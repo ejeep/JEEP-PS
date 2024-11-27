@@ -1,5 +1,5 @@
 /* General Styles */
-.sidebar {
+.management-sidebar {
     height: 100vh;
     width: 250px;
     background-color: #ffffff;
@@ -13,7 +13,7 @@
   }
   
   /* Sidebar Header */
-  .sidebar-header {
+  .management-sidebar-header {
     display: flex;
     align-items: center;
     padding: 15px;
@@ -21,23 +21,23 @@
     color: white;
   }
   
-  .sidebar-header h2 {
+  .management-sidebar-header h2 {
     font-size: 24px;
     margin-left: 10px;
   }
   
-  .sidebar-header .toggle-icon {
+  .management-sidebar-header .toggle-icon {
     cursor: pointer;
   }
   
   /* Menu Items */
-  .sidebar-menu ul {
+  .management-sidebar-menu ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
   }
   
-  .sidebar-menu li {
+  .management-sidebar-menu li {
     display: flex;
     align-items: center;
     padding: 15px;
@@ -47,7 +47,7 @@
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
   }
   
-  .sidebar-menu li a {
+  .management-sidebar-menu li a {
     text-decoration: none;
     color: #333;
     display: flex;
@@ -56,45 +56,45 @@
     width: 100%;
   }
   
-  .sidebar-menu li:hover {
+  .management-sidebar-menu li:hover {
     background-color: #c7f9cc;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   }
   
-  .sidebar-menu li a span {
+  .management-sidebar-menu li a span {
     margin-left: 12px;
   }
   
-  .sidebar-menu li a svg {
+  .management-sidebar-menu li a svg {
     font-size: 1.5rem;
   }
   
   /* Active Menu Item */
-  .sidebar-menu li.active {
+  .management-sidebar-menu li.active {
     background-color: #9bdfac; /* Green background for active state */
     color: white; /* White text for active state */
     font-weight: bold;
   }
   
   /* Collapsed State */
-  .sidebar.collapsed {
+  .management-sidebar.collapsed {
     width: 80px;
   }
   
-  .sidebar.collapsed .sidebar-menu li a span {
+  .management-sidebar.collapsed .sidebar-menu li a span {
     display: none;
   }
   
-  .sidebar.collapsed .sidebar-menu li a {
+  .management-sidebar.collapsed .sidebar-menu li a {
     justify-content: center;
   }
   
-  .sidebar.collapsed .sidebar-header h2 {
+  .management-sidebar.collapsed .sidebar-header h2 {
     display: none;
   }
   
   /* Prevent Scrollbars */
-  .sidebar {
+  .management-sidebar {
     overflow: hidden;
   }
   

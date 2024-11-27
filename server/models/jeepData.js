@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const jeepSchema = new Schema({
-  jeepID: {
+  vehicleID: {
     type: String,
     required: true,
     unique: true,
@@ -44,10 +44,14 @@ const jeepSchema = new Schema({
     type: [String], // Array of strings in HH:mm format
     required: true,
     validate: {
-      validator: (times) => times.every((time) => /^\d{1,2}:\d{2}(?:\s?[APap][Mm])?$/.test(time)),
-      message: "Time must be in HH:mm format (e.g., '5:00 AM').",
+      validator: (times) => times === null || times.every((time) => /^\d{1,2}:\d{2}\s?[APap][Mm]$/.test(time)), // Enforces AM/PM format
+      message: "Time must be in HH:mm AM/PM format (e.g., '5:00 AM').",
     },
   },
+  locationHistory: [
+    { type: mongoose.Schema.Types.ObjectId, ref: 'Location' } // Reference to Location
+  ],
+  latestLocation: { type: mongoose.Schema.Types.ObjectId, ref: 'Location' }, // Latest location reference
 }, { timestamps: true });
 
 const Jeep = mongoose.model("Jeep", jeepSchema);

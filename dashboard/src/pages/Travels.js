@@ -1,8 +1,20 @@
 // src/pages/Travel.js
 import React, { useState, useEffect } from "react";
-import { Box, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import {
+  Box,
+  Grid,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+  CircularProgress,
+} from "@mui/material";
 import axios from "axios";
-import './Travels.css'; // Import the CSS file for additional styling
+import "./Travels.css"; // Import the CSS file for additional styling
 
 function Travel() {
   const [jeeps, setJeeps] = useState([]);
@@ -16,12 +28,15 @@ function Travel() {
         const jeepsResponse = await axios.get("http://localhost:3004/jeep-data/jeeps");
 
         // Set jeeps data with relevant fields (plate number, direction, status)
-        setJeeps(jeepsResponse.data.map((jeep) => ({
-          id: jeep.id,
-          plateNumber: jeep.plateNumber,
-          routeDirection: jeep.routeDirection,
-          status: jeep.status || "Waiting" // Default status to "Waiting" if not set
-        })));
+        setJeeps(
+          jeepsResponse.data.map((jeep) => ({
+            id: jeep.id,
+            plateNumber: jeep.plateNumber,
+            routeDirection: jeep.routeDirection,
+            status: jeep.status || "Waiting", // Default status to "Waiting" if not set
+            timeSchedule: jeep.timeSchedule,
+          }))
+        );
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -37,20 +52,31 @@ function Travel() {
   const renderJeeps = (direction) =>
     jeeps
       .filter((jeep) => jeep.routeDirection === direction)
-      .map((jeep, index) => (
+      .map((jeep) => (
         <TableRow key={jeep.id}>
           <TableCell>{jeep.plateNumber}</TableCell>
           <TableCell>{jeep.routeDirection}</TableCell>
+          <TableCell>{jeep.timeSchedule}</TableCell>
           <TableCell>{jeep.status}</TableCell>
         </TableRow>
       ));
 
   if (loading) {
-    return <Typography variant="h6" align="center">Loading...</Typography>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error) {
-    return <Typography variant="h6" align="center" color="error">{error}</Typography>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
+      </Box>
+    );
   }
 
   return (
@@ -60,40 +86,48 @@ function Travel() {
       </Typography>
       <Grid container spacing={4} justifyContent="center">
         <Grid item xs={12} md={6}>
-          <Typography variant="h6" align="center" gutterBottom>
+          <Typography
+            variant="h6"
+            align="center"
+            gutterBottom
+            sx={{ backgroundColor: "#4CAF50", color: "#fff", padding: 1, borderRadius: "4px" }}
+          >
             North Bound
           </Typography>
           <TableContainer component={Paper} className="table-container">
             <Table>
               <TableHead>
-                <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Status</TableCell>
+                <TableRow style={{ backgroundColor: "#3E8E41", color: "#fff" }}>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Plate Number</TableCell>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Route Direction</TableCell>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Departure Time</TableCell>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Status</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>
-                {renderJeeps("North Bound")}
-              </TableBody>
+              <TableBody>{renderJeeps("North Bound")}</TableBody>
             </Table>
           </TableContainer>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Typography variant="h6" align="center" gutterBottom>
+          <Typography
+            variant="h6"
+            align="center"
+            gutterBottom
+            sx={{ backgroundColor: "#4CAF50", color: "#fff", padding: 1, borderRadius: "4px" }}
+          >
             South Bound
           </Typography>
           <TableContainer component={Paper} className="table-container">
             <Table>
               <TableHead>
-                <TableRow style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-                  <TableCell style={{ color: "#fff" }}>Plate Number</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Route Direction</TableCell>
-                  <TableCell style={{ color: "#fff" }}>Status</TableCell>
+                <TableRow style={{ backgroundColor: "#3E8E41", color: "#fff" }}>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Plate Number</TableCell>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Route Direction</TableCell>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Departure Time</TableCell>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Status</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>
-                {renderJeeps("South Bound")}
-              </TableBody>
+              <TableBody>{renderJeeps("South Bound")}</TableBody>
             </Table>
           </TableContainer>
         </Grid>

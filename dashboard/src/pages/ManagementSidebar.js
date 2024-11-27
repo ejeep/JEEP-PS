@@ -25,9 +25,9 @@ function ManagementSidebar() {
   const isActive = (path) => location.pathname === path ? "active" : ""; // Check if the route matches
 
   return (
-    <div className="sidebar">
+    <div className="management-sidebar">
       {/* Header */}
-      <div className="sidebar-header">
+      <div className="management-idebar-header">
         <div className="toggle-icon">
           <FaBars />
         </div>
@@ -35,7 +35,7 @@ function ManagementSidebar() {
       </div>
 
       {/* Menu */}
-      <div className="sidebar-menu">
+      <div className="management-sidebar-menu">
         <ul>
           {menuItems.map((item, index) => (
             <li key={index} className={isActive(item.to)}>

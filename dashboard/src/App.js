@@ -6,16 +6,15 @@ import Main from "./pages/Main"; // Import Main.js
 import Management from "./pages/Management"; // Import Management.js
 import AdminDashboard from "./pages/AdminDashboard";
 import Travels from "./pages/Travels";
-import Clients from "./pages/Clients";
 import Drivers from "./pages/Drivers";
 import Jeeps from "./pages/Jeeps";
-import Status from "./pages/Status";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Commuter from "./pages/Commuter";
 import About from "./pages/About"; // Import About page
 import Account from "./pages/Account"; // Import Account page
 import Schedule from "./pages/Schedule";
+import JeepDataPage from "./pages/JeepDataPage";
 
 import "leaflet/dist/leaflet.css";
 import "./App.css"; // Add styles for main layout
@@ -48,11 +47,10 @@ function App() {
                 <Routes>
                   <Route path="/dashboard" element={<AdminDashboard />} />
                   <Route path="/travels" element={<Travels />} />
-                  <Route path="/clients" element={<Clients />} />
                   <Route path="/drivers" element={<Drivers />} />
                   <Route path="/jeeps" element={<Jeeps />} />
                   <Route path="/schedule" element={<Schedule />} />
-                  <Route path="/status" element={<Status />} />
+                  <Route path="/jeep-tracker" element={<JeepDataPage />} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/settings" element={<Settings />} />
                 </Routes>

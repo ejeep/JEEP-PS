@@ -12,8 +12,10 @@ import {
   Typography,
   CircularProgress,
   Button,
+  Badge,
+  Tooltip,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, FileDownload } from "@mui/icons-material";
 import axios from "axios";
 import "./Reports.css";
 
@@ -26,7 +28,7 @@ function Reports() {
   useEffect(() => {
     const fetchReportsData = async () => {
       try {
-        const response = await axios.get("http://localhost:3004/jeep-data/jeeps"); // Replace with your actual API endpoint
+        const response = await axios.get("http://localhost:3004/gps/locations"); // Replace with your actual API endpoint
         setReports(response.data); // Set the fetched data into the reports state
         setLoading(false);
       } catch (error) {
@@ -60,21 +62,42 @@ function Reports() {
     }
   };
 
+  const handleGenerateReport = () => {
+    // Implement your report generation logic here (e.g., download as CSV/PDF)
+    console.log("Report Generated");
+  };
+
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         <CircularProgress />
       </Box>
     );
   }
 
   if (error) {
-    return <Typography variant="h6" align="center" color="error">{error}</Typography>;
+    return (
+      <Typography variant="h6" align="center" color="error">
+        {error}
+      </Typography>
+    );
   }
 
   return (
     <Box sx={{ padding: 4 }}>
-      <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: "bold" }}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        align="center"
+        sx={{ fontWeight: "bold", mb: 4 }}
+      >
         Vehicle Management Reports
       </Typography>
 
@@ -84,41 +107,47 @@ function Reports() {
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Vehicle</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Seat Availability</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>
+                Seat Availability
+              </TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Route Direction</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Condition</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Condition</TableCell>              
             </TableRow>
           </TableHead>
           <TableBody>
             {reports.map((report, index) => (
               <TableRow key={index} hover>
-                <TableCell>{report.plateNumber}</TableCell>
-                <TableCell sx={{ color: getStatusColor(report.status), fontWeight: "bold" }}>
-                  {report.status}
-                </TableCell>
+                <TableCell>{report.jeepID}</TableCell>
+                <TableCell>{report.status}</TableCell>
                 <TableCell>{report.seatAvailability}</TableCell>
-                <TableCell>{report.routeDirection}</TableCell>
-                <TableCell>{report.condition}</TableCell>
-                <TableCell>
-                  <IconButton
-                    color={report.isRead ? "secondary" : "primary"}
-                    onClick={() => toggleReadStatus(index)}
-                  >
-                    {report.isRead ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
+                <TableCell>{report.direction}</TableCell>
+                <TableCell
+                  sx={{
+                    color: getStatusColor(report.condition),
+                    fontWeight: "bold",
+                  }}
+                >
+                  <Badge
+                    color={
+                      report.condition === "good"
+                        ? "success"
+                        : report.condition === "maintenance"
+                        ? "warning"
+                        : report.condition === "broken" 
+                        ? "danger"
+                        : "error"
+                    }
+                    variant="dot"
+                    overlap="rectangular"
+                    sx={{ mr: 1 }}
+                  />
+                  {report.condition}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Box sx={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
-        <Button variant="contained" color="primary" sx={{ fontWeight: "bold" }}>
-          Generate Report
-        </Button>
-      </Box>
     </Box>
   );
 }

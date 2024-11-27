@@ -2,16 +2,23 @@ import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { Box, Grid, Typography, Card, TextField, Button } from "@mui/material";
+import { Box, Grid, Typography, Card } from "@mui/material";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import BuildIcon from "@mui/icons-material/Build";
+import DriveEtaIcon from "@mui/icons-material/DriveEta";
 import { styled } from "@mui/system";
 import axios from "axios";
 
 // Fix for missing marker icons in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
 const DashboardContainer = styled(Box)(({ theme }) => ({
@@ -29,6 +36,7 @@ const DashboardCard = styled(Card)(({ theme }) => ({
   boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
 }));
 
+
 const StatusContainer = styled(Box)(({ theme }) => ({
   backgroundColor: "#ffffff",
   border: `1px solid ${theme.palette.divider}`,
@@ -38,18 +46,6 @@ const StatusContainer = styled(Box)(({ theme }) => ({
   boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
   overflowY: "auto",
   maxHeight: "450px", // Prevent excessive height
-}));
-
-const SearchBarContainer = styled(Box)(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  marginBottom: theme.spacing(2),
-  gap: theme.spacing(2),
-  flexDirection: "row",
-  [theme.breakpoints.down("sm")]: {
-    flexDirection: "column",
-    gap: theme.spacing(1),
-  },
 }));
 
 function AdminDashboard() {
@@ -79,7 +75,13 @@ function AdminDashboard() {
   };
 
   // Count the jeeps based on their status
-  const countStatus = (status) => jeepLocations.filter((jeep) => jeep.status === status).length;
+  const countStatus = (status) =>
+    jeepLocations.filter((jeep) => jeep.status === status).length;
+
+  // Filter out jeeps that are "broken" or "on maintenance"
+  const filteredJeepLocations = jeepLocations.filter(
+    (jeep) => jeep.condition !== "broken" && jeep.condition !== "maintenance"
+  );
 
   return (
     <DashboardContainer>
@@ -87,40 +89,40 @@ function AdminDashboard() {
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6} md={3}>
           <DashboardCard>
-            <Typography variant="h6">Total Jeeps</Typography>
+            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
+              <DirectionsBusIcon /> Total Jeeps
+            </Typography>
             <Typography variant="h4">{jeepLocations.length}</Typography>
           </DashboardCard>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <DashboardCard>
-            <Typography variant="h6">En Route</Typography>
+            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
+              <DriveEtaIcon /> En Route
+            </Typography>
             <Typography variant="h4">{countStatus("en route")}</Typography>
           </DashboardCard>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <DashboardCard>
-            <Typography variant="h6">Waiting</Typography>
+            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
+              <HourglassEmptyIcon /> Waiting
+            </Typography>
             <Typography variant="h4">{countStatus("waiting")}</Typography>
           </DashboardCard>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <DashboardCard>
-            <Typography variant="h6">Maintenance</Typography>
+            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
+              <BuildIcon /> Maintenance
+            </Typography>
             <Typography variant="h4">{countStatus("maintenance")}</Typography>
           </DashboardCard>
         </Grid>
       </Grid>
-      
-      {/* Search Bar */}
-      <SearchBarContainer>
-        <TextField variant="outlined" placeholder="Search..." fullWidth />
-        <Button variant="contained" style={{ backgroundColor: "#4CAF50", color: "#fff" }}>
-          Search
-        </Button>
-      </SearchBarContainer>
 
       {/* Jeep Information and Map */}
-      <Grid container spacing={2}>
+      <Grid container spacing={2} marginTop={2}>
         <Grid item xs={12} md={3}>
           <StatusContainer>
             <Typography variant="h6" gutterBottom>
@@ -128,13 +130,24 @@ function AdminDashboard() {
             </Typography>
             {selectedJeep ? (
               <>
-                <Typography variant="body1">Jeep ID: {selectedJeep.jeepID}</Typography>
-                <Typography variant="body2">
-                  Last Updated: {new Date(selectedJeep.timestamp).toLocaleString()}
+                <Typography>Jeep ID: {selectedJeep.jeepID}</Typography>
+                <Typography>
+                  Available Seats: {selectedJeep.seatAvailability}
+                </Typography>
+                <Typography>Status: {selectedJeep.status}</Typography>
+                <Typography>Direction: {selectedJeep.direction}</Typography>
+                <Typography>Condition: {selectedJeep.condition}</Typography>
+                <Typography>
+                  Last Updated:{" "}
+                  {new Date(selectedJeep.timestamp).toLocaleString()}
                 </Typography>
               </>
             ) : (
-              <Typography variant="body2">Click a jeep marker to see its status</Typography>
+              <Typography variant="body2">
+                {" "}
+                Click on a marker on the map to view details about the selected
+                jeepney.
+              </Typography>
             )}
           </StatusContainer>
         </Grid>
@@ -142,10 +155,15 @@ function AdminDashboard() {
           <MapContainer
             center={[16.4939, 121.1128]}
             zoom={13}
-            style={{ height: "450px", width: "100%", borderRadius: "12px", overflow: "hidden" }}
+            style={{
+              height: "475px",
+              width: "100%",
+              borderRadius: "12px",
+              overflow: "hidden",
+            }}
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {jeepLocations.map((jeep, index) => (
+            {filteredJeepLocations.map((jeep, index) => (
               <Marker
                 key={index}
                 position={[jeep.jeepLocation.lat, jeep.jeepLocation.lng]}
@@ -154,10 +172,27 @@ function AdminDashboard() {
                 }}
               >
                 <Popup>
-                  <Typography>Jeep ID: {jeep.jeepID}</Typography>
-                  <Typography>
-                    Last Updated: {new Date(jeep.timestamp).toLocaleString()}
-                  </Typography>
+                  <Box>
+                    <Typography variant="subtitle1">
+                      <strong>Jeep ID:</strong> {jeep.jeepID}
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      <strong>Available Seats:</strong> {jeep.seatAvailability}
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      <strong>Status:</strong> {jeep.status}
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      <strong>Direction:</strong> {jeep.direction}
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      <strong>Condition:</strong> {jeep.condition}
+                    </Typography>
+                    <Typography variant="caption">
+                      <strong>Last Updated:</strong>{" "}
+                      {new Date(jeep.timestamp).toLocaleString()}
+                    </Typography>
+                  </Box>
                 </Popup>
               </Marker>
             ))}

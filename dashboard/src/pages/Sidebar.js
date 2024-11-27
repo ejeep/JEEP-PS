@@ -9,9 +9,10 @@ import {
   Settings,
   Logout,
   TripOrigin,
-  DepartureBoard
+  DepartureBoard,
 } from "@mui/icons-material";
 import "./Sidebar.css";
+import LocationSearchingIcon from "@mui/icons-material/LocationSearching";
 import LogoutModal from "../components/LogoutModal";
 
 function Sidebar() {
@@ -29,8 +30,8 @@ function Sidebar() {
   };
 
   const confirmLogout = () => {
-    setShowLogoutModal(false);
-    navigate("/");
+    localStorage.removeItem("user");
+    window.location.href = "/";
   };
 
   const closeModal = () => {
@@ -48,7 +49,11 @@ function Sidebar() {
           <Menu />
         </div>
         <div className="logo">
-          {isOpen ? <h2>JEEP-PS</h2> : <img src="/logo.png" alt="Logo" className="sidebar-logo" />}
+          {isOpen ? (
+            <h2>JEEP-PS</h2>
+          ) : (
+            <img src="/logo.png" alt="Logo" className="sidebar-logo" />
+          )}
         </div>
       </div>
 
@@ -85,9 +90,9 @@ function Sidebar() {
             </Link>
           </li>
           <li>
-            <Link to="/status">
-              <DirectionsCar />
-              <span>Status</span>
+            <Link to="/jeep-tracker">
+              <LocationSearchingIcon />
+              <span>Jeep Tracker</span>
             </Link>
           </li>
           <li>
