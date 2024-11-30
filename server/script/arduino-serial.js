@@ -1,75 +1,84 @@
-const SerialPort = require('serialport');  // Correct way to import in version 9.x
+const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 const axios = require('axios');
 
-// Replace with your actual serial port (example: COM3 for Windows)
 const port = new SerialPort('COM3', {
-  baudRate: 9600
+    baudRate: 9600,
 });
 
-// Parser to handle incoming data from the Arduino
 const parser = port.pipe(new Readline({ delimiter: '\n' }));
 
-// Conversion factor for speed from km/h to m/s
-const convertSpeedToMetersPerSecond = (speedKmh) => {
-  return speedKmh * (1000 / 3600);
-};
+let dataBuffer = '';
 
-// Function to send data to MERN backend
-const sendDataToMERN = async (arduinoID, lat, lng, speed) => {
-  try {
-    // POST request to the backend with location data
-    const response = await axios.post('http://localhost:3004/gps/jeep-location', {
-      arduinoID: arduinoID,  // Unique ID for the Jeep
-      jeepLocation: {
-        lat: lat,    // Latitude from Arduino
-        lng: lng     // Longitude from Arduino
-      },
-      speed: speed,    // Speed in m/s
-      timestamp: new Date()  // Automatically generated timestamp
-    });
-    console.log('Data sent to MERN:', response.data);
-  } catch (error) {
-    console.error('Error sending data:', error);
-  }
-};
-
-let smsMessages = [];
-
-// Handle incoming data from Arduino (GSM Module)
 parser.on('data', (chunk) => {
-  console.log('Received raw data:', chunk.toString());
+    dataBuffer += chunk; // Append incoming chunk to buffer
 
-  const message = chunk.toString().trim();
+    try {
+        // Filter out non-relevant data
+        if (!dataBuffer.includes('ARD')) {
+            console.log('Ignored non-SMS data:', chunk);
+            dataBuffer = ''; // Reset buffer for next input
+            return;
+        }
 
-  // Process only SMS data (e.g., messages starting with "+CMT:")
-  if (message.includes("+CMT:")) {
-    // Example of extracting SMS content after "+CMT:"
-    const smsContent = message.split("+CMT:")[1]?.trim();
-    if (smsContent) {
-      smsMessages.push(smsContent); // Store SMS content in memory
+        // Parse the SMS content
+        const parsedData = parseSMS(dataBuffer.trim());
+
+        // Reset buffer after successful parsing
+        dataBuffer = '';
+
+        // Log the parsed data
+        console.log('Parsed SMS Data:', parsedData);
+
+        // Send the parsed data to the server
+        sendDataToMERN(parsedData);
+
+    } catch (error) {
+        console.error('Error parsing SMS or sending data:', error.message);
+        // Reset the buffer if it's an invalid SMS
+        dataBuffer = '';
     }
-  }
 });
 
+// Function to parse the SMS content based on the LocationSchema
+const parseSMS = (sms) => {
+    const fields = sms.split(',');
 
+    // Remove any unintended prefixes in the first field
+    const arduinoID = fields[0].replace('SMS Content: ', '').trim();
 
-// Function to process and parse a single message
-// function processMessage(message) {
-//   try {
-//     const parsedData = JSON.parse(message);
-//     const { arduinoID, jeepLocation, speed } = parsedData;
+    // Map the fields to the schema
+    const locationData = {
+        arduinoID, // Arduino ID without prefix
+        jeepLocation: {
+            lat: parseFloat(fields[1]), // Latitude
+            lng: parseFloat(fields[2]), // Longitude
+        },
+        speed: parseFloat(fields[3]), // Speed
+        seatAvailability: parseInt(fields[4], 10), // Seat availability
+        status: fields[5], // Status
+        direction: fields[6], // Direction
+        condition: fields[7], // Condition
+    };
 
-//     if (arduinoID && jeepLocation?.lat && jeepLocation?.lng && speed !== undefined) {
-//       const speedMs = convertSpeedToMetersPerSecond(parseFloat(speed));
-//       sendDataToMERN(arduinoID, parseFloat(jeepLocation.lat), parseFloat(jeepLocation.lng), speedMs);
-//     } else {
-//       console.log('Invalid JSON structure:', parsedData);
-//     }
-//   } catch (error) {
-//     console.log('Received non-JSON data or parsing error:', error.message);
-//   }
-// }
+    return locationData;
+};
 
-
-
+// Function to send data to the MERN backend
+const sendDataToMERN = async (parsedData) => {
+    try {
+        const response = await axios.post('http://localhost:3004/gps/jeep-location', {
+            arduinoID: parsedData.arduinoID,
+            jeepLocation: parsedData.jeepLocation,
+            speed: parsedData.speed,
+            seatAvailability: parsedData.seatAvailability,
+            status: parsedData.status,
+            direction: parsedData.direction,
+            condition: parsedData.condition,
+            // Add timestamp if needed for the request
+        });
+        console.log('Data sent successfully:', response.data);
+    } catch (error) {
+        console.error('Error sending data to the server:', error.message);
+    }
+};

@@ -26,15 +26,49 @@ exports.commuterLocation = async (req, res) => {
 };
 
 // Create Location (for Jeep)
+// exports.createLocation = async (req, res) => {
+//   try {
+//     console.log(req.body); // Log the incoming request body for debugging
+
+//     const { arduinoID, jeepLocation, speed, seatAvailability, status, direction, condition, timestamp } = req.body;
+
+//     // Validate input, excluding plateNumber
+//     if (!arduinoID || !jeepLocation || !jeepLocation.lat || !jeepLocation.lng || speed === undefined || seatAvailability === undefined || !status || !direction || !condition) {
+//       return res.status(400).json({ message: "arduinoID, latitude, longitude, speed, seatAvailability, status, direction, and condition are required." });
+//     }
+
+//     // Validate speed
+//     if (speed < 0) {
+//       return res.status(400).json({ message: "Speed cannot be negative." });
+//     }
+
+//     const locationData = new Location({
+//       arduinoID,
+//       jeepLocation,
+//       speed,
+//       seatAvailability,
+//       status,
+//       direction,
+//       condition,
+//       timestamp: timestamp ? new Date(timestamp) : Date.now()
+//     });
+
+//     await locationData.save();
+//     res.status(201).json({ message: "Location saved successfully.", data: locationData });
+//   } catch (error) {
+//     console.error("Error saving location:", error);
+//     res.status(500).json({ message: "Internal server error." });
+//   }
+// };
 exports.createLocation = async (req, res) => {
   try {
-    console.log(req.body); // Log the incoming request body for debugging
-
     const { arduinoID, jeepLocation, speed, seatAvailability, status, direction, condition, timestamp } = req.body;
 
-    // Validate input, excluding plateNumber
+    // Validate input
     if (!arduinoID || !jeepLocation || !jeepLocation.lat || !jeepLocation.lng || speed === undefined || seatAvailability === undefined || !status || !direction || !condition) {
-      return res.status(400).json({ message: "arduinoID, latitude, longitude, speed, seatAvailability, status, direction, and condition are required." });
+      return res.status(400).json({
+        message: "arduinoID, latitude, longitude, speed, seatAvailability, status, direction, and condition are required.",
+      });
     }
 
     // Validate speed
@@ -42,7 +76,31 @@ exports.createLocation = async (req, res) => {
       return res.status(400).json({ message: "Speed cannot be negative." });
     }
 
-    const locationData = new Location({
+    // Try to find an existing document with the arduinoID
+    let location = await Location.findOne({ arduinoID });
+
+    // If the location exists, update it
+    if (location) {
+      // Update the existing document
+      location.jeepLocation = jeepLocation;
+      location.speed = speed;
+      location.seatAvailability = seatAvailability;
+      location.status = status;
+      location.direction = direction;
+      location.condition = condition;
+      if (timestamp) {
+        location.timestamp = new Date(timestamp);
+      }
+
+      await location.save(); // Save the updated location
+      return res.status(200).json({
+        message: "Location updated successfully.",
+        data: location,
+      });
+    }
+
+    // If the location does not exist, create a new one
+    const newLocation = new Location({
       arduinoID,
       jeepLocation,
       speed,
@@ -50,13 +108,16 @@ exports.createLocation = async (req, res) => {
       status,
       direction,
       condition,
-      timestamp: timestamp ? new Date(timestamp) : Date.now()
+      timestamp: timestamp ? new Date(timestamp) : Date.now(),
     });
 
-    await locationData.save();
-    res.status(201).json({ message: "Location saved successfully.", data: locationData });
+    await newLocation.save(); // Save the new location
+    res.status(201).json({
+      message: "Location created successfully.",
+      data: newLocation,
+    });
   } catch (error) {
-    console.error("Error saving location:", error);
+    console.error("Error processing location:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 };
