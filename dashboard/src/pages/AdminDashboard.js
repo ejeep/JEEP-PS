@@ -74,14 +74,19 @@ function AdminDashboard() {
     setSelectedJeep(jeep);
   };
 
-  // Count the jeeps based on their status
+  // Count the jeeps based on their status (excluding broken and maintenance jeeps)
   const countStatus = (status) =>
-    jeepLocations.filter((jeep) => jeep.status === status).length;
+    jeepLocations.filter(
+      (jeep) => jeep.status === status && jeep.condition !== "broken" && jeep.condition !== "maintenance"
+    ).length;
 
   // Filter out jeeps that are "broken" or "on maintenance"
   const filteredJeepLocations = jeepLocations.filter(
     (jeep) => jeep.condition !== "broken" && jeep.condition !== "maintenance"
   );
+
+  // Calculate the total number of active jeeps (not broken or under maintenance)
+  const totalActiveJeeps = filteredJeepLocations.length;
 
   return (
     <DashboardContainer>
@@ -92,7 +97,7 @@ function AdminDashboard() {
             <Typography variant="h6" display="flex" alignItems="center" gap={1}>
               <DirectionsBusIcon /> Total Jeeps
             </Typography>
-            <Typography variant="h4">{jeepLocations.length}</Typography>
+            <Typography variant="h4">{totalActiveJeeps}</Typography>
           </DashboardCard>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -205,3 +210,4 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
+

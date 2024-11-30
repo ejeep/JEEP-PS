@@ -2,64 +2,54 @@ const Location = require('../models/gpsData');
 const CommuterLocation = require('../models/commuterLocation');
 const Jeep = require('../models/jeepData'); // Jeep model
 
+
 exports.commuterLocation = async (req, res) => {
   try {
     console.log("Received Data:", req.body);
-    const { commuterLocation } = req.body;
-    if (commuterLocation.longitude === undefined || commuterLocation.latitude === undefined) {
+
+    const { commuterLocation, commuterId } = req.body;
+
+    // Ensure commuterLocation exists in the request body
+    if (!commuterLocation || commuterLocation.latitude === undefined || commuterLocation.longitude === undefined) {
       return res.status(400).json({ message: "Longitude and Latitude are required." });
     }
-    const newLocation = new CommuterLocation({  
-      commuterLocation: {
-        latitude: commuterLocation.latitude,
-        longitude: commuterLocation.longitude,
-        timestamp: new Date(), // Set the current timestamp
-      }, 
-    });
-    await newLocation.save();
 
-    res.status(201).json({ message: "Location saved successfully." });
+    // Find the commuter by commuterId, if provided, or create a new commuter if not
+    let existingCommuter;
+
+    if (commuterId) {
+      existingCommuter = await CommuterLocation.findById(commuterId); // Find the commuter by ID
+    }
+
+    if (existingCommuter) {
+      // Update the existing commuter's location
+      existingCommuter.commuterLocation.latitude = commuterLocation.latitude;
+      existingCommuter.commuterLocation.longitude = commuterLocation.longitude;
+      existingCommuter.commuterLocation.timestamp = new Date(); // Update the timestamp
+
+      await existingCommuter.save(); // Save the updated commuter location
+      res.status(200).json({ message: "Commuter location updated successfully." });
+    } else {
+      // If the commuter does not exist, create a new commuter location
+      const newLocation = new CommuterLocation({
+        commuterLocation: {
+          latitude: commuterLocation.latitude,
+          longitude: commuterLocation.longitude,
+          timestamp: new Date(), // Set the current timestamp
+        },
+      });
+
+      await newLocation.save(); // Save the new commuter location
+      res.status(201).json({ message: "New commuter location saved successfully." });
+    }
   } catch (error) {
-    console.error("Error saving location:", error);
-    res.status(500).json({ message: "Error saving location." });
+    console.error("Error saving or updating location:", error);
+    res.status(500).json({ message: "Error saving or updating location." });
   }
 };
 
-// Create Location (for Jeep)
-// exports.createLocation = async (req, res) => {
-//   try {
-//     console.log(req.body); // Log the incoming request body for debugging
 
-//     const { arduinoID, jeepLocation, speed, seatAvailability, status, direction, condition, timestamp } = req.body;
 
-//     // Validate input, excluding plateNumber
-//     if (!arduinoID || !jeepLocation || !jeepLocation.lat || !jeepLocation.lng || speed === undefined || seatAvailability === undefined || !status || !direction || !condition) {
-//       return res.status(400).json({ message: "arduinoID, latitude, longitude, speed, seatAvailability, status, direction, and condition are required." });
-//     }
-
-//     // Validate speed
-//     if (speed < 0) {
-//       return res.status(400).json({ message: "Speed cannot be negative." });
-//     }
-
-//     const locationData = new Location({
-//       arduinoID,
-//       jeepLocation,
-//       speed,
-//       seatAvailability,
-//       status,
-//       direction,
-//       condition,
-//       timestamp: timestamp ? new Date(timestamp) : Date.now()
-//     });
-
-//     await locationData.save();
-//     res.status(201).json({ message: "Location saved successfully.", data: locationData });
-//   } catch (error) {
-//     console.error("Error saving location:", error);
-//     res.status(500).json({ message: "Internal server error." });
-//   }
-// };
 exports.createLocation = async (req, res) => {
   try {
     const { arduinoID, jeepLocation, speed, seatAvailability, status, direction, condition, timestamp } = req.body;

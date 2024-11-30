@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import axios from "axios";
+import debounce from "lodash.debounce";
 import { styled } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
@@ -59,6 +60,7 @@ function Main() {
   useEffect(() => {
     fetchJeepLocations();
     fetchData();
+    getCommuterLocation();
 
     const interval = setInterval(fetchJeepLocations, 600000); // Update every 10 minutes
     return () => clearInterval(interval);
@@ -75,6 +77,49 @@ function Main() {
       setError("Failed to load data.");
     }
   };
+
+  const getCommuterLocation = debounce(async () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          const commuterPayload = { latitude, longitude }; // Flatten payload
+
+          try {
+            const response = await axios.put(
+              "http://localhost:3004/gps/commuter-location",
+              commuterPayload // Pass the correct payload
+            );
+
+            // Log server response for debugging
+            console.log("Server response:", response.data);
+
+            // Update local state with commuter location
+            setCommuterLocation(commuterPayload);
+            setError(null); // Reset any previous errors
+          } catch (error) {
+            console.error(
+              "Error posting commuter location:",
+              error.response ? error.response.data : error.message
+            );
+            setError("Failed to send your location.");
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setError("Unable to retrieve your location.");
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by this browser.");
+    }
+  }, 60000);
+
+  // Ensure commuter location is posted once after the component mounts
+  useEffect(() => {
+    getCommuterLocation();
+  }, []);
 
   const handleJeepClick = (jeep) => {
     setSelectedJeep(jeep);
@@ -124,7 +169,9 @@ function Main() {
   return (
     <Box sx={{ padding: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
-        {tabIndex === 0 ? "Travel Display Information" : "Jeep Information and Map"}
+        {tabIndex === 0
+          ? "Travel Display Information"
+          : "Jeep Information and Map"}
       </Typography>
 
       <LoginButton variant="outlined" onClick={() => navigate("/login")}>
@@ -195,12 +242,15 @@ function Main() {
               {selectedJeep ? (
                 <>
                   <Typography>Jeep ID: {selectedJeep.arduinoID}</Typography>
-                  <Typography>Available Seats: {selectedJeep.seatAvailability}</Typography>
+                  <Typography>
+                    Available Seats: {selectedJeep.seatAvailability}
+                  </Typography>
                   <Typography>Status: {selectedJeep.status}</Typography>
                   <Typography>Direction: {selectedJeep.direction}</Typography>
                   <Typography>Condition: {selectedJeep.condition}</Typography>
                   <Typography>
-                    Last Updated: {new Date(selectedJeep.timestamp).toLocaleString()}
+                    Last Updated:{" "}
+                    {new Date(selectedJeep.timestamp).toLocaleString()}
                   </Typography>
                 </>
               ) : (
@@ -238,7 +288,8 @@ function Main() {
                         <strong>Jeep ID:</strong> {jeep.arduinoID}
                       </Typography>
                       <Typography variant="subtitle2">
-                        <strong>Available Seats:</strong> {jeep.seatAvailability}
+                        <strong>Available Seats:</strong>{" "}
+                        {jeep.seatAvailability}
                       </Typography>
                       <Typography variant="subtitle2">
                         <strong>Status:</strong> {jeep.status}
@@ -267,9 +318,14 @@ function Main() {
                 >
                   <Popup>
                     <Typography variant="subtitle1">
-                      <strong>Commuter Location</strong>
+                      <strong>Your Current Location</strong>
                     </Typography>
-                    <Typography variant="body2">Your location</Typography>
+                    <Typography variant="body2">
+                      Latitude: {commuterLocation.latitude.toFixed(5)}
+                    </Typography>
+                    <Typography variant="body2">
+                      Longitude: {commuterLocation.longitude.toFixed(5)}
+                    </Typography>
                   </Popup>
                 </Marker>
               )}
