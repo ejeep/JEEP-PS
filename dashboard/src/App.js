@@ -19,6 +19,7 @@ import TravelLogs from "./pages/TravelLogs";
 
 import "leaflet/dist/leaflet.css";
 import "./App.css"; // Add styles for main layout
+import AdminSettings from "./pages/AdminSettings";
 
 function App() {
   return (
@@ -54,7 +55,7 @@ function App() {
                   <Route path="/jeep-tracker" element={<JeepDataPage />} />
                   <Route path="/travel-logs" element={<TravelLogs />} />
                   <Route path="/reports" element={<Reports />} />
-                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/adminsettings" element={<AdminSettings />} />
                 </Routes>
               </div>
             </div>

@@ -3,10 +3,14 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+const { sha256 } = require('js-sha256'); // Password hashing library
+const crypto = require('crypto'); // Node.js crypto module for salt generation
+
 const driverData = require('./routes/driverDataRoutes');
 const jeepData = require('./routes/jeepDataRoutes');
 const locationRoutes = require('./routes/gpsDataRoutes');
 const travelLogRoutes = require('./routes/travelLogRoutes');
+const userRoutes = require('./routes/userRoutes')
 
 const app = express();
 
@@ -36,6 +40,7 @@ app.use('/driver-data', driverData);
 app.use('/jeep-data', jeepData);
 app.use('/gps', locationRoutes);
 app.use('/travel', travelLogRoutes);
+app.use('/users', userRoutes)
 
 // Arduino-friendly endpoint for testing connection
 app.get('/ping', (req, res) => {

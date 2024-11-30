@@ -113,7 +113,7 @@ function Sidebar() {
       <div className="sidebar-footer">
         <ul>
           <li>
-            <Link to="/settings">
+            <Link to="/adminsettings">
               <Settings />
               <span>Settings</span>
             </Link>
