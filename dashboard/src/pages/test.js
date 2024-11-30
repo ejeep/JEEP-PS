@@ -1,58 +1,52 @@
 import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Grid,
+  Paper,
+  Table,
+  Button,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+  Switch,
+} from "@mui/material";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import { Box, Grid, Typography, Card } from "@mui/material";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import BuildIcon from "@mui/icons-material/Build";
-import DriveEtaIcon from "@mui/icons-material/DriveEta";
-import { styled } from "@mui/system";
 import axios from "axios";
+import debounce from "lodash.debounce";
+import { styled } from "@mui/system";
+import { useNavigate } from "react-router-dom";
+import "leaflet/dist/leaflet.css";
 
-// Fix for missing marker icons in Leaflet
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
-
-const DashboardContainer = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(4),
-  minHeight: "100vh",
-  backgroundColor: "#f5f5f5",
-}));
-
-const DashboardCard = styled(Card)(({ theme }) => ({
-  backgroundColor: "#28a745",
-  color: "#fff",
-  textAlign: "center",
-  padding: theme.spacing(2),
-  borderRadius: "12px",
-  boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-}));
-
-
-const StatusContainer = styled(Box)(({ theme }) => ({
+const LoginButton = styled(Button)(({ theme }) => ({
   backgroundColor: "#ffffff",
-  border: `1px solid ${theme.palette.divider}`,
-  padding: theme.spacing(2),
-  height: "100%",
-  borderRadius: "12px",
-  boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-  overflowY: "auto",
-  maxHeight: "450px", // Prevent excessive height
+  color: "#28a745",
+  position: "absolute",
+  top: "20px",
+  right: "20px",
+  zIndex: 1000,
+  padding: theme.spacing(1.5, 3),
+  borderRadius: "20px",
+  fontWeight: "bold",
+  [theme.breakpoints.down("sm")]: {
+    bottom: "20px",
+    right: "50%",
+    transform: "translateX(50%)",
+    width: "90%",
+  },
 }));
 
-function AdminDashboard() {
+function Main() {
+  const [jeeps, setJeeps] = useState([]);
+  const [error, setError] = useState(null);
+  const [viewMap, setViewMap] = useState(false); // Toggle between views
+  const [commuterLocation, setCommuterLocation] = useState(null);
   const [jeepLocations, setJeepLocations] = useState([]);
   const [selectedJeep, setSelectedJeep] = useState(null);
+  const navigate = useNavigate();
 
-  // Fetch jeep location data from API
   const fetchJeepLocations = async () => {
     try {
       const response = await axios.get("http://localhost:3004/gps/locations");
@@ -64,143 +58,227 @@ function AdminDashboard() {
 
   useEffect(() => {
     fetchJeepLocations();
+    fetchData();
 
     // Optionally, poll the API every few seconds for real-time updates
     const interval = setInterval(fetchJeepLocations, 600000); // Update every 10 minutes
     return () => clearInterval(interval); // Cleanup interval on component unmount
   }, []);
 
+    const fetchData = async () => {
+      try {
+        const jeepsResponse = await axios.get(
+          "http://localhost:3004/jeep-data/jeeps"
+        );
+        setJeeps(jeepsResponse.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Failed to load data.");
+        setLoading(false);
+      }
+    };
+
+  
+
   const handleJeepClick = (jeep) => {
     setSelectedJeep(jeep);
   };
 
-  // Count the jeeps based on their status
-  const countStatus = (status) =>
-    jeepLocations.filter((jeep) => jeep.status === status).length;
-
-  // Filter out jeeps that are "broken" or "on maintenance"
   const filteredJeepLocations = jeepLocations.filter(
     (jeep) => jeep.condition !== "broken" && jeep.condition !== "maintenance"
   );
 
-  return (
-    <DashboardContainer>
-      {/* Summary Cards */}
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardCard>
-            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
-              <DirectionsBusIcon /> Total Jeeps
-            </Typography>
-            <Typography variant="h4">{jeepLocations.length}</Typography>
-          </DashboardCard>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardCard>
-            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
-              <DriveEtaIcon /> En Route
-            </Typography>
-            <Typography variant="h4">{countStatus("en route")}</Typography>
-          </DashboardCard>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardCard>
-            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
-              <HourglassEmptyIcon /> Waiting
-            </Typography>
-            <Typography variant="h4">{countStatus("waiting")}</Typography>
-          </DashboardCard>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardCard>
-            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
-              <BuildIcon /> Maintenance
-            </Typography>
-            <Typography variant="h4">{countStatus("maintenance")}</Typography>
-          </DashboardCard>
-        </Grid>
-      </Grid>
+  const renderJeeps = (direction) =>
+    jeeps
+      .filter((jeep) => jeep.routeDirection === direction)
+      .map((jeep) => (
+        <TableRow key={jeep.id}>
+          <TableCell>{jeep.plateNumber}</TableCell>
+          <TableCell>{jeep.routeDirection}</TableCell>
+          <TableCell>{jeep.status}</TableCell>
+          <TableCell>{jeep.timeSchedule}</TableCell>
+        </TableRow>
+      ));
 
-      {/* Jeep Information and Map */}
-      <Grid container spacing={2} marginTop={2}>
-        <Grid item xs={12} md={3}>
-          <StatusContainer>
-            <Typography variant="h6" gutterBottom>
-              Jeep Information
-            </Typography>
-            {selectedJeep ? (
-              <>
-                <Typography>Jeep ID: {selectedJeep.jeepID}</Typography>
-                <Typography>
-                  Available Seats: {selectedJeep.seatAvailability}
-                </Typography>
-                <Typography>Status: {selectedJeep.status}</Typography>
-                <Typography>Direction: {selectedJeep.direction}</Typography>
-                <Typography>Condition: {selectedJeep.condition}</Typography>
-                <Typography>
-                  Last Updated:{" "}
-                  {new Date(selectedJeep.timestamp).toLocaleString()}
-                </Typography>
-              </>
-            ) : (
-              <Typography variant="body2">
-                {" "}
-                Click on a marker on the map to view details about the selected
-                jeepney.
+  // Get current location using geolocation API
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCommuterLocation({ latitude, longitude });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setError("Failed to get commuter location.");
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by this browser.");
+    }
+  };
+
+  // Call getCurrentLocation when the component mounts
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+
+  return (
+    <Box sx={{ padding: 4 }}>
+      <Typography variant="h4" gutterBottom align="center">
+        {viewMap ? "Jeep Information and Map" : "Travel Display Information"}
+      </Typography>
+
+      <LoginButton variant="outlined" onClick={() => navigate("/login")}>
+        Login
+      </LoginButton>
+
+      <Box display="flex" justifyContent="center" alignItems="center" mb={2}>
+        <Typography>Travel Display</Typography>
+        <Switch
+          checked={viewMap}
+          onChange={() => setViewMap(!viewMap)}
+          color="primary"
+        />
+        <Typography>Jeep Map</Typography>
+      </Box>
+
+      {viewMap ? (
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={3}>
+            <Box p={2} border={1} borderRadius={2}>
+              <Typography variant="h6" gutterBottom>
+                Jeep Information
               </Typography>
-            )}
-          </StatusContainer>
-        </Grid>
-        <Grid item xs={12} md={9}>
-          <MapContainer
-            center={[16.4939, 121.1128]}
-            zoom={13}
-            style={{
-              height: "475px",
-              width: "100%",
-              borderRadius: "12px",
-              overflow: "hidden",
-            }}
-          >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {filteredJeepLocations.map((jeep, index) => (
-              <Marker
-                key={index}
-                position={[jeep.jeepLocation.lat, jeep.jeepLocation.lng]}
-                eventHandlers={{
-                  click: () => handleJeepClick(jeep),
-                }}
-              >
-                <Popup>
-                  <Box>
+              {selectedJeep ? (
+                <>
+                  <Typography>Jeep ID: {selectedJeep.jeepID}</Typography>
+                  <Typography>
+                    Available Seats: {selectedJeep.seatAvailability}
+                  </Typography>
+                  <Typography>Status: {selectedJeep.status}</Typography>
+                  <Typography>Direction: {selectedJeep.direction}</Typography>
+                  <Typography>Condition: {selectedJeep.condition}</Typography>
+                  <Typography>
+                    Last Updated:{" "}
+                    {new Date(selectedJeep.timestamp).toLocaleString()}
+                  </Typography>
+                </>
+              ) : (
+                <Typography>Select a marker to view jeep details.</Typography>
+              )}
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={9}>
+            <MapContainer
+              center={commuterLocation ? [commuterLocation.latitude, commuterLocation.longitude] : [16.4939, 121.1128]}
+              zoom={13}
+              style={{
+                height: "475px",
+                width: "100%",
+                borderRadius: "12px",
+                overflow: "hidden",
+              }}
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {filteredJeepLocations.map((jeep, index) => (
+                <Marker
+                  key={index}
+                  position={[jeep.jeepLocation.lat, jeep.jeepLocation.lng]}
+                  eventHandlers={{
+                    click: () => handleJeepClick(jeep),
+                  }}
+                >
+                  <Popup>
+                    <Box>
+                      <Typography variant="subtitle1">
+                        <strong>Jeep ID:</strong> {jeep.arduinoID}
+                      </Typography>
+                      <Typography variant="subtitle2">
+                        <strong>Available Seats:</strong>{" "}
+                        {jeep.seatAvailability}
+                      </Typography>
+                      <Typography variant="subtitle2">
+                        <strong>Status:</strong> {jeep.status}
+                      </Typography>
+                      <Typography variant="subtitle2">
+                        <strong>Direction:</strong> {jeep.direction}
+                      </Typography>
+                      <Typography variant="subtitle2">
+                        <strong>Condition:</strong> {jeep.condition}
+                      </Typography>
+                      <Typography variant="caption">
+                        <strong>Last Updated:</strong>{" "}
+                        {new Date(jeep.timestamp).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Popup>
+                </Marker>
+              ))}
+
+              {/* Add commuter location marker if available */}
+              {commuterLocation && (
+                <Marker
+                  position={[commuterLocation.latitude, commuterLocation.longitude]}
+                >
+                  <Popup>
                     <Typography variant="subtitle1">
-                      <strong>Jeep ID:</strong> {jeep.jeepID}
+                      <strong>Commuter Location</strong>
                     </Typography>
-                    <Typography variant="subtitle2">
-                      <strong>Available Seats:</strong> {jeep.seatAvailability}
+                    <Typography variant="body2">
+                      Latitude: {commuterLocation.latitude}, Longitude:{" "}
+                      {commuterLocation.longitude}
                     </Typography>
-                    <Typography variant="subtitle2">
-                      <strong>Status:</strong> {jeep.status}
-                    </Typography>
-                    <Typography variant="subtitle2">
-                      <strong>Direction:</strong> {jeep.direction}
-                    </Typography>
-                    <Typography variant="subtitle2">
-                      <strong>Condition:</strong> {jeep.condition}
-                    </Typography>
-                    <Typography variant="caption">
-                      <strong>Last Updated:</strong>{" "}
-                      {new Date(jeep.timestamp).toLocaleString()}
-                    </Typography>
-                  </Box>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+                  </Popup>
+                </Marker>
+              )}
+            </MapContainer>
+          </Grid>
         </Grid>
-      </Grid>
-    </DashboardContainer>
+      ) : (
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" align="center" gutterBottom>
+              North Bound
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Plate Number</TableCell>
+                    <TableCell>Route Direction</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Departure Time</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>{renderJeeps("North Bound")}</TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" align="center" gutterBottom>
+              South Bound
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Plate Number</TableCell>
+                    <TableCell>Route Direction</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Departure Time</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>{renderJeeps("South Bound")}</TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
+        </Grid>
+      )}
+    </Box>
   );
 }
 
-export default AdminDashboard;
+export default Main;

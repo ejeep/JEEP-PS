@@ -16,11 +16,11 @@ const convertSpeedToMetersPerSecond = (speedKmh) => {
 };
 
 // Function to send data to MERN backend
-const sendDataToMERN = async (jeepID, lat, lng, speed) => {
+const sendDataToMERN = async (arduinoID, lat, lng, speed) => {
   try {
     // POST request to the backend with location data
     const response = await axios.post('http://localhost:3004/gps/jeep-location', {
-      jeepID: jeepID,  // Unique ID for the Jeep
+      arduinoID: arduinoID,  // Unique ID for the Jeep
       jeepLocation: {
         lat: lat,    // Latitude from Arduino
         lng: lng     // Longitude from Arduino
@@ -58,11 +58,11 @@ parser.on('data', (chunk) => {
 // function processMessage(message) {
 //   try {
 //     const parsedData = JSON.parse(message);
-//     const { jeepID, jeepLocation, speed } = parsedData;
+//     const { arduinoID, jeepLocation, speed } = parsedData;
 
-//     if (jeepID && jeepLocation?.lat && jeepLocation?.lng && speed !== undefined) {
+//     if (arduinoID && jeepLocation?.lat && jeepLocation?.lng && speed !== undefined) {
 //       const speedMs = convertSpeedToMetersPerSecond(parseFloat(speed));
-//       sendDataToMERN(jeepID, parseFloat(jeepLocation.lat), parseFloat(jeepLocation.lng), speedMs);
+//       sendDataToMERN(arduinoID, parseFloat(jeepLocation.lat), parseFloat(jeepLocation.lng), speedMs);
 //     } else {
 //       console.log('Invalid JSON structure:', parsedData);
 //     }

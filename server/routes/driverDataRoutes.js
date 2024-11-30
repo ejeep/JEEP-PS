@@ -20,7 +20,7 @@ router.post(
   createDriver      // Controller function to create driver
 );
 
-router.get('/drivers/:id?', getDrivers);
+router.get('/drivers/', getDrivers);
 router.put('/update-driver/:id', upload, updateDriver);
 router.delete('/delete-driver/:id', deleteDriver);
 

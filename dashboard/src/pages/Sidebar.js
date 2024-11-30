@@ -96,6 +96,12 @@ function Sidebar() {
             </Link>
           </li>
           <li>
+            <Link to="/travel-logs">
+              <LocationSearchingIcon />
+              <span>Travel Logs</span>
+            </Link>
+          </li>
+          <li>
             <Link to="/reports">
               <Report />
               <span>Reports</span>

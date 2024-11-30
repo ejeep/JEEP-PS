@@ -130,7 +130,8 @@ function AdminDashboard() {
             </Typography>
             {selectedJeep ? (
               <>
-                <Typography>Jeep ID: {selectedJeep.jeepID}</Typography>
+                <Typography>Jeep ID: {selectedJeep.arduinoID}</Typography>
+                <Typography>Plate Number: {selectedJeep.plateNumber}</Typography>                
                 <Typography>
                   Available Seats: {selectedJeep.seatAvailability}
                 </Typography>
@@ -174,7 +175,7 @@ function AdminDashboard() {
                 <Popup>
                   <Box>
                     <Typography variant="subtitle1">
-                      <strong>Jeep ID:</strong> {jeep.jeepID}
+                      <strong>Jeep ID:</strong> {jeep.arduinoID}
                     </Typography>
                     <Typography variant="subtitle2">
                       <strong>Available Seats:</strong> {jeep.seatAvailability}

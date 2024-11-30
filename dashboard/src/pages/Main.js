@@ -40,70 +40,53 @@ const LoginButton = styled(Button)(({ theme }) => ({
 
 function Main() {
   const [jeeps, setJeeps] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewMap, setViewMap] = useState(false); // Toggle between views
   const [commuterLocation, setCommuterLocation] = useState(null);
+  const [jeepLocations, setJeepLocations] = useState([]);
   const [selectedJeep, setSelectedJeep] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch jeep data
+  const fetchJeepLocations = async () => {
+    try {
+      const response = await axios.get("http://localhost:3004/gps/locations");
+      setJeepLocations(response.data); // Assuming the API returns an array of jeep location data
+    } catch (error) {
+      console.error("Error fetching jeep locations:", error);
+    }
+  };
+
   useEffect(() => {
+    fetchJeepLocations();
+    fetchData();
+
+    // Optionally, poll the API every few seconds for real-time updates
+    const interval = setInterval(fetchJeepLocations, 600000); // Update every 10 minutes
+    return () => clearInterval(interval); // Cleanup interval on component unmount
+  }, []);
+
     const fetchData = async () => {
       try {
-        const jeepsResponse = await axios.get("http://localhost:3004/jeep-data/jeeps");
+        const jeepsResponse = await axios.get(
+          "http://localhost:3004/jeep-data/jeeps"
+        );
         setJeeps(jeepsResponse.data);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
         setError("Failed to load data.");
-        setLoading(false);
       }
     };
 
-    fetchData();
-    getCommuterLocation(); // Get commuter location on component mount
-  }, []);
+  
 
-  // Function to get commuter's location
-  const getCommuterLocation = debounce(async () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-  
-          console.log("Sending location:", {
-            commuterLocation: { latitude, longitude }
-          });
-  
-          try {
-            const response = await axios.post("http://localhost:3004/gps/commuter-location", {
-              commuterLocation: { latitude, longitude }
-            });
-  
-            console.log("Response from server:", response.data); // Log the server response
-            setError(null); // Reset error state on successful request
-          } catch (error) {
-            console.error("Error sending location:", error.response ? error.response.data : error.message);
-            setError("Failed to send your location."); // Update error message
-          }
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setError("Unable to retrieve your location.");
-        }
-      );
-    } else {
-      setError("Geolocation is not supported by this browser.");
-    }
-  }, 60000);
-
-  // Handle click on a jeep marker
   const handleJeepClick = (jeep) => {
     setSelectedJeep(jeep);
   };
 
-  // Render jeeps in table based on direction
+  const filteredJeepLocations = jeepLocations.filter(
+    (jeep) => jeep.condition !== "broken" && jeep.condition !== "maintenance"
+  );
+
   const renderJeeps = (direction) =>
     jeeps
       .filter((jeep) => jeep.routeDirection === direction)
@@ -116,13 +99,29 @@ function Main() {
         </TableRow>
       ));
 
-  if (loading) {
-    return <Typography variant="h6" align="center">Loading...</Typography>;
-  }
+  // Get current location using geolocation API
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCommuterLocation({ latitude, longitude });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setError("Failed to get commuter location.");
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by this browser.");
+    }
+  };
 
-  if (error) {
-    return <Typography variant="h6" align="center" color="error">{error}</Typography>;
-  }
+  // Call getCurrentLocation when the component mounts
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
 
   return (
     <Box sx={{ padding: 4 }}>
@@ -153,13 +152,16 @@ function Main() {
               </Typography>
               {selectedJeep ? (
                 <>
-                  <Typography>Jeep ID: {selectedJeep.jeepID}</Typography>
-                  <Typography>Available Seats: {selectedJeep.seatAvailability}</Typography>
+                  <Typography>Jeep ID: {selectedJeep.arduinoID}</Typography>
+                  <Typography>
+                    Available Seats: {selectedJeep.seatAvailability}
+                  </Typography>
                   <Typography>Status: {selectedJeep.status}</Typography>
                   <Typography>Direction: {selectedJeep.direction}</Typography>
                   <Typography>Condition: {selectedJeep.condition}</Typography>
                   <Typography>
-                    Last Updated: {new Date(selectedJeep.timestamp).toLocaleString()}
+                    Last Updated:{" "}
+                    {new Date(selectedJeep.timestamp).toLocaleString()}
                   </Typography>
                 </>
               ) : (
@@ -169,17 +171,17 @@ function Main() {
           </Grid>
           <Grid item xs={12} md={9}>
             <MapContainer
-              center={commuterLocation || [16.4939, 121.1128]}
+              center={commuterLocation ? [commuterLocation.latitude, commuterLocation.longitude] : [16.4939, 121.1128]}
               zoom={13}
-              style={{ height: "475px", width: "100%", borderRadius: "12px" }}
+              style={{
+                height: "475px",
+                width: "100%",
+                borderRadius: "12px",
+                overflow: "hidden",
+              }}
             >
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {commuterLocation && (
-                <Marker position={commuterLocation}>
-                  <Popup>Your Location</Popup>
-                </Marker>
-              )}
-              {jeeps.map((jeep, index) => (
+              {filteredJeepLocations.map((jeep, index) => (
                 <Marker
                   key={index}
                   position={[jeep.jeepLocation.lat, jeep.jeepLocation.lng]}
@@ -188,11 +190,47 @@ function Main() {
                   }}
                 >
                   <Popup>
-                    <Typography><strong>Jeep ID:</strong> {jeep.jeepID}</Typography>
-                    <Typography><strong>Status:</strong> {jeep.status}</Typography>
+                    <Box>
+                      <Typography variant="subtitle1">
+                        <strong>Jeep ID:</strong> {jeep.arduinoID}
+                      </Typography>
+                      <Typography variant="subtitle2">
+                        <strong>Available Seats:</strong>{" "}
+                        {jeep.seatAvailability}
+                      </Typography>
+                      <Typography variant="subtitle2">
+                        <strong>Status:</strong> {jeep.status}
+                      </Typography>
+                      <Typography variant="subtitle2">
+                        <strong>Direction:</strong> {jeep.direction}
+                      </Typography>
+                      <Typography variant="subtitle2">
+                        <strong>Condition:</strong> {jeep.condition}
+                      </Typography>
+                      <Typography variant="caption">
+                        <strong>Last Updated:</strong>{" "}
+                        {new Date(jeep.timestamp).toLocaleString()}
+                      </Typography>
+                    </Box>
                   </Popup>
                 </Marker>
               ))}
+
+              {/* Add commuter location marker if available */}
+              {commuterLocation && (
+                <Marker
+                  position={[commuterLocation.latitude, commuterLocation.longitude]}
+                >
+                  <Popup>
+                    <Typography variant="subtitle1">
+                      <strong>Commuter Location</strong>
+                    </Typography>
+                    <Typography variant="body2">
+                     Your location
+                    </Typography>
+                  </Popup>
+                </Marker>
+              )}
             </MapContainer>
           </Grid>
         </Grid>

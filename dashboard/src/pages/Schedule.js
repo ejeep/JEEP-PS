@@ -196,13 +196,13 @@ function Schedule() {
   // Columns definition for the DataGrid
   const columns = [
     { field: "plateNumber", headerName: "Plate Number", width: 150 },
-    { field: "route", headerName: "Route", width: 200 },
+    { field: "routeDirection", headerName: "Route Direction", width: 200 },
     { field: "assignedDriver", headerName: "Assigned Driver", width: 250 },
     { field: "timeSchedule", headerName: "Schedule Time", width: 250 },
     {
       field: "actions",
       headerName: "Actions",
-      width: 300,
+      width: 350,
       renderCell: (params) => (
         <>
         <Button
@@ -215,12 +215,17 @@ function Schedule() {
           >
             Assign Schedule
           </Button>
-          <IconButton
+          <span style={{ margin: "0 8px" }}></span>
+          <Button
+            variant="outlined" // Change to outlined to match theme
             onClick={() => handleOpenDeleteDialog(params.row)}
-            style={{ color: "#4CAF50" }}
+            style={{
+              borderColor: "#F44336", // Green border
+              color: "#F44336", // Green text
+            }}
           >
-            <Delete />
-          </IconButton>          
+            Clear Schedule
+          </Button>         
         </>
       ),
     },

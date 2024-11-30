@@ -31,14 +31,16 @@ function Jeeps() {
   const [formData, setFormData] = useState({
     plateNumber: "",
     model: "",
-    route: "",
     routeDirection: "North Bound",
   });
   const [jeeps, setJeeps] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(""); // State for success message
+  const [errorMessage, setErrorMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDriver, setSelectedDriver] = useState(null);
   const [filteredJeeps, setFilteredJeeps] = useState([]);
   const style = {
     position: "absolute",
@@ -75,6 +77,20 @@ function Jeeps() {
     }
   };
 
+  // State to hold selected driver
+
+  const handleDriverChange = (e) => {
+    const driverName = e.target.value;
+    const driver = activeDrivers.find((d) => d.name === driverName);
+    setSelectedDriver(driver); // Update selected driver
+  };
+
+  const handleAssignClick = () => {
+    if (selectedDriver) {
+      handleAssignDriver(selectedDriver); // Assign driver only on button click
+    }
+  };
+
   const handleError = (message) => {
     setError(message);
     setOpenSnackbar(true);
@@ -88,7 +104,6 @@ function Jeeps() {
     setFormData({
       plateNumber: "",
       model: "",
-      route: "",
       routeDirection: "North Bound",
     });
     setIsEdit(false);
@@ -105,8 +120,9 @@ function Jeeps() {
   const handleCloseDriverModal = () => setOpenDriverModal(false);
 
   const handleOpenDeleteDialog = (jeep) => {
-    setSelectedJeep(jeep); // Save the jeep object to be deleted
-    setOpenDeleteDialog(true); // Open the delete confirmation dialog
+    console.log("Selected Jeep:", jeep); // Add this line to debug
+    setSelectedJeep(jeep); // Store the selected jeep in the state
+    setOpenDeleteDialog(true); // Open the delete dialog
   };
 
   // Handle closing the delete confirmation dialog without deleting
@@ -120,7 +136,7 @@ function Jeeps() {
 
   const handleAdd = async () => {
     // Form validation
-    if (!formData.plateNumber || !formData.model || !formData.route) {
+    if (!formData.plateNumber || !formData.model) {
       return handleError("All fields are required");
     }
 
@@ -147,7 +163,6 @@ function Jeeps() {
       const response = await axios.put(
         `${API_BASE_URL}/jeep-data/updateVehicle/${selectedJeep.plateNumber}`,
         {
-          route: formData.route,
           routeDirection: formData.routeDirection,
         }
       );
@@ -166,10 +181,12 @@ function Jeeps() {
   };
 
   const handleDelete = async () => {
-    if (!selectedJeep) return; // Check if a jeep is selected for deletion
+    if (!selectedJeep) return; // Ensure selectedJeep exists
+
+    console.log("Deleting jeep with plate number:", selectedJeep.plateNumber); // Debug log to check
 
     try {
-      // Send DELETE request to remove the jeep from the database
+      // Send DELETE request to remove the jeep using its plateNumber
       await axios.delete(
         `${API_BASE_URL}/jeep-data/deleteVehicle/${selectedJeep.plateNumber}`
       );
@@ -196,27 +213,31 @@ function Jeeps() {
   const handleAssignDriver = async (driver) => {
     if (!driver) return handleError("No driver selected");
 
-    // Check if the driver is already assigned to another jeep
+    // Check if the driver is already assigned to another jeep but not the current jeep
     const isDriverAssigned = jeeps.some(
-      (jeep) => jeep.assignedDriver === driver.name
+      (jeep) =>
+        jeep.plateNumber !== selectedJeep.plateNumber &&
+        jeep.assignedDriver === driver.name
     );
 
     if (isDriverAssigned) {
-      return handleError("This driver is already assigned to another jeep.");
+      return setErrorMessage(
+        "This driver is already assigned to another jeep."
+      );
     }
 
     try {
+      // Assign driver to the selected jeep
       const response = await axios.put(
         `${API_BASE_URL}/jeep-data/updateVehicle/${selectedJeep.plateNumber}`,
         {
-          model: selectedJeep.model,
-          route: selectedJeep.route,
-          routeDirection: selectedJeep.routeDirection,
           assignedDriver: driver.name,
         }
       );
 
       const updatedJeep = response.data;
+
+      // Update the jeeps state and filteredJeeps immediately
       setJeeps((prevJeeps) =>
         prevJeeps.map((jeep) =>
           jeep.plateNumber === updatedJeep.plateNumber ? updatedJeep : jeep
@@ -228,10 +249,46 @@ function Jeeps() {
           jeep.plateNumber === updatedJeep.plateNumber ? updatedJeep : jeep
         )
       );
-      fetchJeeps();
-      handleCloseDriverModal();
+      setSuccessMessage("Driver assigned successfully!"); // Set success message
+      setOpenSnackbar(true); // Show Snackbar
+      handleCloseDriverModal(); // Close the modal after assignment
     } catch (error) {
-      handleError("Error assigning driver");
+      setErrorMessage("Error assigning driver");
+    }
+  };
+
+  const handleClearDriver = async (jeep) => {
+    if (!jeep) return handleError("No jeep selected to clear the driver");
+
+    try {
+      // Make an API request to clear the driver assignment
+      const response = await axios.put(
+        `${API_BASE_URL}/jeep-data/updateVehicle/${jeep.plateNumber}`,
+        {
+          assignedDriver: null, // Clear the assigned driver
+        }
+      );
+
+      const updatedJeep = response.data;
+
+      // Update the state to reflect the cleared driver
+      setJeeps((prevJeeps) =>
+        prevJeeps.map((item) =>
+          item.plateNumber === updatedJeep.plateNumber ? updatedJeep : item
+        )
+      );
+
+      setFilteredJeeps((prevFilteredJeeps) =>
+        prevFilteredJeeps.map((item) =>
+          item.plateNumber === updatedJeep.plateNumber ? updatedJeep : item
+        )
+      );
+
+      // Display success message
+      setSuccessMessage("Driver cleared successfully!");
+      setOpenSnackbar(true);
+    } catch (error) {
+      handleError("Error clearing driver assignment");
     }
   };
 
@@ -240,7 +297,6 @@ function Jeeps() {
     setFormData({
       plateNumber: jeep.plateNumber,
       model: jeep.model,
-      route: jeep.route,
       routeDirection: jeep.routeDirection || "North Bound",
     });
     setIsEdit(true);
@@ -268,25 +324,16 @@ function Jeeps() {
     { field: "plateNumber", headerName: "Plate Number", width: 150 },
     { field: "model", headerName: "Model", width: 150 },
     { field: "routeDirection", headerName: "Route Direction", width: 150 },
-    { field: "route", headerName: "Route", width: 220 },
     { field: "assignedDriver", headerName: "Assigned Driver", width: 250 },
     {
-      field: "actions",
-      headerName: "Actions",
-      width: 300,
+      field: "driverAssignment",
+      headerName: "Driver Assignment",
+      width: 460,
       renderCell: (params) => (
         <>
-          <IconButton onClick={() => handleOpenModalWithJeep(params.row)}>
-            <Edit />
-          </IconButton>
-          <IconButton
-            onClick={() => handleOpenDeleteDialog(params.row.plateNumber)}
-            style={{ color: "#4CAF50" }}
-          >
-            <Delete />
-          </IconButton>
+          {/* Assign Driver Button */}
           <Button
-            variant="outlined" // Change to outlined to match theme
+            variant="outlined"
             onClick={() => handleOpenDriverModal(params.row)}
             style={{
               borderColor: "#4CAF50", // Green border
@@ -295,6 +342,40 @@ function Jeeps() {
           >
             Assign Driver
           </Button>
+
+          {/* Spacer for button alignment */}
+          <span style={{ margin: "0 8px" }}></span>
+
+          {/* Clear Driver Button */}
+          <Button
+            variant="outlined"
+            onClick={() => handleClearDriver(params.row)}
+            style={{
+              borderColor: "#F44336", // Red border
+              color: "#F44336", // Red text
+            }}
+          >
+            Clear Driver
+          </Button>
+        </>
+      ),
+    },
+
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 100,
+      renderCell: (params) => (
+        <>
+          <IconButton onClick={() => handleOpenModalWithJeep(params.row)}>
+            <Edit />
+          </IconButton>
+          <IconButton
+            onClick={() => handleOpenDeleteDialog(params.row)}
+            style={{ color: "#4CAF50" }}
+          >
+            <Delete />
+          </IconButton>
         </>
       ),
     },
@@ -305,7 +386,7 @@ function Jeeps() {
     id: jeep.plateNumber, // Using plateNumber as a unique id for each row
     plateNumber: jeep.plateNumber,
     model: jeep.model,
-    route: `${jeep.route}`,
+
     assignedDriver: jeep.assignedDriver || "None",
   }));
 
@@ -383,15 +464,6 @@ function Jeeps() {
             style={{ marginBottom: "10px" }}
           />
           <TextField
-            label="Route"
-            variant="outlined"
-            name="route"
-            fullWidth
-            value={formData.route}
-            onChange={handleChange}
-            style={{ marginBottom: "10px" }}
-          />
-          <TextField
             label="Route Direction"
             select
             name="routeDirection"
@@ -442,19 +514,14 @@ function Jeeps() {
           }}
         >
           <Typography variant="h6" sx={{ color: "#4CAF50" }}>
-            {" "}
-            {/* Green title */}
             Assign Driver to {selectedJeep?.plateNumber}
           </Typography>
           {activeDrivers.length > 0 ? (
             <TextField
               select
               label="Select Driver"
-              onChange={(e) =>
-                handleAssignDriver(
-                  drivers.find((driver) => driver.name === e.target.value)
-                )
-              }
+              value={selectedDriver?.name || ""}
+              onChange={handleDriverChange}
               fullWidth
               margin="normal"
             >
@@ -479,11 +546,12 @@ function Jeeps() {
           >
             <Button
               variant="contained"
-              onClick={() => handleAssignDriver(selectedJeep.assignedDriver)}
+              onClick={handleAssignClick}
               style={{
                 backgroundColor: "#4CAF50", // Green background for Assign Driver
                 color: "#fff", // White text
               }}
+              disabled={!selectedDriver} // Disable button if no driver is selected
             >
               Assign Driver
             </Button>
@@ -504,32 +572,28 @@ function Jeeps() {
       <Dialog
         open={openDeleteDialog}
         onClose={handleCloseDeleteDialog}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="delete-dialog-title">{"Confirm Deletion"}</DialogTitle>
+        <DialogTitle id="alert-dialog-title">
+          {"Are you sure you want to delete this jeep?"}
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body1">
-            Are you sure you want to delete this jeep?
-          </Typography>
+            Plate Number: {selectedJeep?.plateNumber}
+          </Typography>          
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={handleCloseDeleteDialog}
-            style={{
-              borderColor: "#4CAF50", // Green border for Cancel
-              color: "#4CAF50", // Green text
-            }}
-          >
+          <Button onClick={handleCloseDeleteDialog} style={{
+                borderColor: "#4CAF50", // Green border for Cancel
+                color: "#4CAF50", // Green text
+              }}>
             Cancel
           </Button>
-          <Button
-            onClick={handleDelete} // Trigger delete function on confirmation
-            style={{
-              backgroundColor: "#4CAF50", // Green background for Assign Driver
-              color: "#fff", // White text
-            }}
-          >
+          <Button onClick={handleDelete}  style={{
+                backgroundColor: "#4CAF50", // Green background for Assign Driver
+                color: "#fff", // White text
+              }}>
             Delete
           </Button>
         </DialogActions>
@@ -537,10 +601,25 @@ function Jeeps() {
 
       {/* Snackbar for Error */}
       <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        message={error}
+        open={!!successMessage}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMessage("")}
+        message={successMessage}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        ContentProps={{
+          style: { backgroundColor: "#4CAF50", color: "white" }, // Green for success
+        }}
+      />
+
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={3000}
+        onClose={() => setErrorMessage("")}
+        message={errorMessage}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        ContentProps={{
+          style: { backgroundColor: "#C80815", color: "white" }, // Red for error
+        }}
       />
     </Box>
   );

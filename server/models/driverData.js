@@ -33,12 +33,6 @@ const driverSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
-    proofOfResidency: {
-      type: String,
-    },
-    insuranceCertificate: {
-      type: String,
-    },
   },
   documentMetadata: {
     fileSize: {

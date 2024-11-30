@@ -6,6 +6,7 @@ require('dotenv').config();
 const driverData = require('./routes/driverDataRoutes');
 const jeepData = require('./routes/jeepDataRoutes');
 const locationRoutes = require('./routes/gpsDataRoutes');
+const travelLogRoutes = require('./routes/travelLogRoutes');
 
 const app = express();
 
@@ -13,7 +14,6 @@ const app = express();
 const PORT = process.env.PORT || 3004;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/Jeep-PS';
 const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
-
 // Middleware
 app.use(
   cors({
@@ -35,6 +35,7 @@ app.use(express.json());
 app.use('/driver-data', driverData);
 app.use('/jeep-data', jeepData);
 app.use('/gps', locationRoutes);
+app.use('/travel', travelLogRoutes);
 
 // Arduino-friendly endpoint for testing connection
 app.get('/ping', (req, res) => {
@@ -61,6 +62,7 @@ const connectToDatabase = async () => {
 };
 
 connectToDatabase();
+
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -15,6 +15,7 @@ import About from "./pages/About"; // Import About page
 import Account from "./pages/Account"; // Import Account page
 import Schedule from "./pages/Schedule";
 import JeepDataPage from "./pages/JeepDataPage";
+import TravelLogs from "./pages/TravelLogs";
 
 import "leaflet/dist/leaflet.css";
 import "./App.css"; // Add styles for main layout
@@ -51,6 +52,7 @@ function App() {
                   <Route path="/jeeps" element={<Jeeps />} />
                   <Route path="/schedule" element={<Schedule />} />
                   <Route path="/jeep-tracker" element={<JeepDataPage />} />
+                  <Route path="/travel-logs" element={<TravelLogs />} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/settings" element={<Settings />} />
                 </Routes>

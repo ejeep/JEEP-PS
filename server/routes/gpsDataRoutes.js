@@ -7,6 +7,7 @@ const locationController = require('../controllers/gpsDataController');
 router.post('/commuter-location', locationController.commuterLocation);
 router.post('/jeep-location', locationController.createLocation);
 router.get('/locations', locationController.getAllLocations);
-router.put('/assign-vehicle/:jeepID', locationController.updateLocation);
+router.get('/display-commuter-location', locationController.getCommuterLocation);
+router.put('/assign-vehicle/:arduinoID', locationController.assignJeepToArduino);
 
 module.exports = router;

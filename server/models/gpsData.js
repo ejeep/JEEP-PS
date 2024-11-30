@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
 const LocationSchema = new mongoose.Schema({
-  jeepID: { type: String, required: true }, // Unique ID for the Jeep
+  arduinoID: { type: String, required: true }, // Unique ID for the Jeep
+  plateNumber: { type: String, ref: "Jeep", required: false },
   jeepLocation: {
     lat: { type: Number, required: true }, // Latitude
     lng: { type: Number, required: true }, // Longitude

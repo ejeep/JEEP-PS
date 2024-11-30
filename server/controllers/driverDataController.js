@@ -42,8 +42,6 @@ const upload = multer({
 }).fields([
   { name: "licenseCopy", maxCount: 1 },
   { name: "idCopy", maxCount: 1 },
-  { name: "proofOfResidency", maxCount: 1 },
-  { name: "insuranceCertificate", maxCount: 1 },
 ]);
 
 // Utility Function: Delete Files
@@ -68,8 +66,6 @@ const createDriver = async (req, res) => {
     const documents = {
       licenseCopy: req.files?.licenseCopy?.[0]?.path || null,
       idCopy: req.files?.idCopy?.[0]?.path || null,
-      proofOfResidency: req.files?.proofOfResidency?.[0]?.path || null,
-      insuranceCertificate: req.files?.insuranceCertificate?.[0]?.path || null,
     };
 
     // Ensure Mandatory Files
@@ -202,6 +198,8 @@ const getDrivers = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
 
 // Multer Error Handling Middleware
 const multerErrorHandler = (error, req, res, next) => {

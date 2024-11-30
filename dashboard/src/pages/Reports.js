@@ -117,7 +117,7 @@ function Reports() {
           <TableBody>
             {reports.map((report, index) => (
               <TableRow key={index} hover>
-                <TableCell>{report.jeepID}</TableCell>
+                <TableCell>{report.arduinoID}</TableCell>
                 <TableCell>{report.status}</TableCell>
                 <TableCell>{report.seatAvailability}</TableCell>
                 <TableCell>{report.direction}</TableCell>

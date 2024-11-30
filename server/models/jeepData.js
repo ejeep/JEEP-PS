@@ -25,11 +25,7 @@ const jeepSchema = new Schema({
     enum: ["North Bound", "South Bound"],
     required: true,
   },
-  route: {
-    type: String,
-    required: true,
-    trim: true,
-  },
+
   assignedDriver: {
     type: String,
     trim: true,

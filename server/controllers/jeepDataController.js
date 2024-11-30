@@ -14,31 +14,20 @@ exports.getAllJeeps = async (req, res) => {
 
 // Create a new jeep
 exports.createJeep = async (req, res) => {
-  const { plateNumber, model, route, routeDirection, timeSchedule } = req.body;
+  const { plateNumber, model, routeDirection } = req.body;
 
-  // Basic validation
-  if (!plateNumber || !model || !route || !routeDirection || !timeSchedule) {
-    return res
-      .status(400)
-      .json({ message: "All fields are required, including timeSchedule." });
+  if (!plateNumber || !model || !routeDirection) {
+    return res.status(400).json({ message: "All fields are required." });
   }
 
   try {
-    // Check if the plateNumber already exists
     const existingJeep = await Jeep.findOne({ plateNumber });
     if (existingJeep) {
       return res.status(400).json({ message: "Plate number already exists." });
     }
 
-    // Create and save the new jeep
-    const newJeep = new Jeep({
-      plateNumber,
-      model,
-      route,
-      routeDirection,
-      timeSchedule,
-    });
-    await newJeep.save();
+    const newJeep = new Jeep({ plateNumber, model, routeDirection });
+    await newJeep.save(); // Triggers the pre-save hook
     res.status(201).json(newJeep);
   } catch (error) {
     console.error("Error creating jeep:", error);
@@ -49,10 +38,10 @@ exports.createJeep = async (req, res) => {
 // Update an existing jeep
 // Update Jeep data, including the assigned driver and time schedule
 exports.updateJeep = async (req, res) => {
-  const { route, routeDirection, assignedDriver, timeSchedule } = req.body;
+  const { routeDirection, assignedDriver, timeSchedule } = req.body;
 
   try {
-    // Fetch the jeep first to check if it already has a schedule
+    // Fetch the jeep to check if it exists
     const jeep = await Jeep.findOne({ plateNumber: req.params.plateNumber });
 
     // If no jeep is found, return an error
@@ -60,23 +49,33 @@ exports.updateJeep = async (req, res) => {
       return res.status(404).json({ message: "Jeep not found." });
     }
 
-    // If the jeep has no timeSchedule (it's null or an empty array), ensure timeSchedule is provided
-    if (!jeep.timeSchedule || jeep.timeSchedule.length === 0) {
-      if (!timeSchedule || timeSchedule.length === 0) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Schedule cannot be empty when assigning for the first time.",
-          });
-      }
+    // If the timeSchedule field is included in the request, validate it
+    if (
+      timeSchedule !== undefined &&
+      (!jeep.timeSchedule || jeep.timeSchedule.length === 0) &&
+      (!timeSchedule || timeSchedule.length === 0)
+    ) {
+      return res.status(400).json({
+        message: "Schedule cannot be empty when assigning for the first time.",
+      });
     }
 
-    // If the jeep already has a timeSchedule, we allow clearing it (setting to an empty array)
-    // Proceed with the update logic, including the cleared schedule if applicable
+    // Prepare the update object
+    const updateData = {};
+
+    if (routeDirection) updateData.routeDirection = routeDirection;
+
+    // Handle assignedDriver explicitly, allowing it to be cleared
+    if (assignedDriver !== undefined) {
+      updateData.assignedDriver = assignedDriver === "" ? null : assignedDriver;
+    }
+
+    if (timeSchedule !== undefined) updateData.timeSchedule = timeSchedule;
+
+    // Proceed with the update logic
     const updatedJeep = await Jeep.findOneAndUpdate(
       { plateNumber: req.params.plateNumber },
-      { route, routeDirection, assignedDriver, timeSchedule },
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -132,7 +131,6 @@ const addLocationToJeep = async (req, res) => {
     res.status(500).json({ message: "Error adding location data to jeep" });
   }
 };
-
 
 // Delete a jeep
 exports.deleteJeep = async (req, res) => {

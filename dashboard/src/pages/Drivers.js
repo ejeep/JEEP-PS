@@ -26,6 +26,8 @@ import { Edit, Delete, Add, Search } from "@mui/icons-material";
 import axios from "axios";
 import { DataGrid } from "@mui/x-data-grid";
 
+const API_BASE_URL = "http://localhost:3004";
+
 function Drivers() {
   const [openModal, setOpenModal] = useState(false);
   const [drivers, setDrivers] = useState([]);
@@ -57,7 +59,7 @@ function Drivers() {
     setLoading(true);
     try {
       const response = await axios.get(
-        "http://localhost:3004/driver-data/drivers"
+        `${API_BASE_URL}/driver-data/drivers`
       );
       setDrivers(response.data);
       setFilteredDrivers(response.data);
@@ -118,8 +120,6 @@ function Drivers() {
       documents: {
         licenseCopy: null,
         idCopy: null,
-        proofOfResidency: null,
-        insuranceCertificate: null,
       },
       status: "Active",
     });
@@ -161,26 +161,22 @@ function Drivers() {
     formDataToSend.append("address", formData.address);
     formDataToSend.append("status", formData.status);
 
-    const { licenseCopy, idCopy, proofOfResidency, insuranceCertificate } =
+    const { licenseCopy, idCopy } =
       formData.documents;
     if (licenseCopy) formDataToSend.append("licenseCopy", licenseCopy);
     if (idCopy) formDataToSend.append("idCopy", idCopy);
-    if (proofOfResidency)
-      formDataToSend.append("proofOfResidency", proofOfResidency);
-    if (insuranceCertificate)
-      formDataToSend.append("insuranceCertificate", insuranceCertificate);
 
     try {
       if (selectedDriverId) {
         await axios.put(
-          `http://localhost:3004/driver-data/update-driver/${selectedDriverId}`,
+          `${API_BASE_URL}/driver-data/update-driver/${selectedDriverId}`,
           formDataToSend,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
         showAlert("success", "Driver updated successfully.");
       } else {
         await axios.post(
-          "http://localhost:3004/driver-data/add-drivers",
+          `${API_BASE_URL}/driver-data/add-drivers`,
           formDataToSend,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
@@ -193,11 +189,27 @@ function Drivers() {
     }
   };
 
-  const handleDelete = async (driverId) => {
+  const handleDelete = async (name,driverId) => {
     if (window.confirm("Are you sure you want to delete this driver?")) {
       try {
+
+        const jeepsWithDriver = await axios.get(`${API_BASE_URL}/jeep-data/jeeps`);
+
+        // Find all jeeps that have the driver assigned
+        const jeepsToUpdate = jeepsWithDriver.data.filter((jeep) => jeep.assignedDriver === name);
+        
+        // If there are any jeeps with the assigned driver, clear them
+        if (jeepsToUpdate.length > 0) {
+          // Loop through each jeep and clear the assigned driver
+          for (const jeep of jeepsToUpdate) {
+            await axios.put(`${API_BASE_URL}/jeep-data/updateVehicle/${jeep.plateNumber}`, {
+              assignedDriver: null,  // Clear the assigned driver
+            });
+          }
+        }
+
         await axios.delete(
-          `http://localhost:3004/driver-data/delete-driver/${driverId}`
+          `${API_BASE_URL}/driver-data/delete-driver/${driverId}`
         );
         showAlert("success", "Driver deleted successfully.");
         fetchDrivers();
@@ -243,7 +255,7 @@ function Drivers() {
           </Tooltip>
           <Tooltip title="Delete">
             <IconButton
-              onClick={() => handleDelete(params.row._id)}
+              onClick={() => handleDelete(params.row.name,params.row._id)}
               style={{ color: "#4CAF50" }}
             >
               <Delete />
@@ -354,20 +366,6 @@ function Drivers() {
             <TextField
               label="ID Copy"
               name="idCopy"
-              type="file"
-              onChange={handleFileChange}
-              fullWidth
-            />
-            <TextField
-              label="Proof of Residency"
-              name="proofOfResidency"
-              type="file"
-              onChange={handleFileChange}
-              fullWidth
-            />
-            <TextField
-              label="Insurance Certificate"
-              name="insuranceCertificate"
               type="file"
               onChange={handleFileChange}
               fullWidth
