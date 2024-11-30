@@ -1,7 +1,6 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
@@ -19,9 +18,12 @@
     "http-proxy": "^1.18.1",
     "mongoose-sequence": "^6.0.1",
     "ngrok": "^5.0.0-beta.2",
+    "port": "^0.8.1",
+    "serial": "^0.0.9",
     "serialport": "^9.2.8"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
-  }
+  },
+  "description": ""
 }
