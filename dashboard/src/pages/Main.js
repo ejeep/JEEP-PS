@@ -21,22 +21,46 @@ import { styled } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 
-const LoginButton = styled(Button)(({ theme }) => ({
-  backgroundColor: "#ffffff",
-  color: "#28a745",
-  position: "absolute",
-  top: "20px",
-  right: "20px",
-  zIndex: 1000,
-  padding: theme.spacing(1.5, 3),
-  borderRadius: "20px",
+// Table Cell Styles
+const StyledTableCell = styled(TableCell)(({ status }) => ({
+  color:
+    status === "Waiting" ? "#ffe600" : // Yellow for "Waiting"
+    status === "En Route" ? "#0fff47" : // Green for "En Route"
+    "#ffffff", // White for other statuses
+  fontFamily: "monospace",
   fontWeight: "bold",
-  [theme.breakpoints.down("sm")]: {
-    bottom: "20px",
-    right: "50%",
-    transform: "translateX(50%)",
-    width: "90%",
-  },
+  fontSize: "1rem",
+}));
+
+// Table Container Styles
+const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+  backgroundColor: "#1900ff", // Table background color
+  borderRadius: "12px", // Rounded corners
+  overflow: "hidden",
+}));
+
+// Header with Glowing Text Effect
+const GlowingHeader = styled(Typography)(({ theme }) => ({
+  color: "#0fff47", // Header text color green
+  backgroundColor: "#1900ff", // Header background color
+  padding: "10px",
+  borderRadius: "8px", // Rounded corners
+  textAlign: "center",
+  textShadow: "0 0 10px rgba(40, 167, 69, 0.8), 0 0 20px rgba(40, 167, 69, 0.6)", // Glow effect
+  marginBottom: "5px",
+}));
+
+// Main Title Styles with Box Header
+const TitleBox = styled(Box)(({ theme }) => ({
+  backgroundColor: "#1900ff", // Match the design theme
+  color: "#0fff47", // Glowing green text
+  padding: "20px",
+  textAlign: "center",
+  textShadow: "0 0 10px rgba(40, 167, 69, 0.8), 0 0 20px rgba(40, 167, 69, 0.6)",
+  fontWeight: "bold",
+  fontSize: "1.8rem",
+  borderRadius: "8px",
+  marginBottom: "20px",
 }));
 
 function Main() {
@@ -134,10 +158,10 @@ function Main() {
       .filter((jeep) => jeep.routeDirection === direction)
       .map((jeep) => (
         <TableRow key={jeep.id}>
-          <TableCell>{jeep.plateNumber}</TableCell>
-          <TableCell>{jeep.routeDirection}</TableCell>
-          <TableCell>{jeep.status}</TableCell>
-          <TableCell>{jeep.timeSchedule}</TableCell>
+          <StyledTableCell>{jeep.plateNumber}</StyledTableCell>
+          <StyledTableCell>{jeep.routeDirection}</StyledTableCell>
+          <StyledTableCell status={jeep.status}>{jeep.status}</StyledTableCell>
+          <StyledTableCell>{jeep.timeSchedule}</StyledTableCell>
         </TableRow>
       ));
 
@@ -168,15 +192,11 @@ function Main() {
 
   return (
     <Box sx={{ padding: 4 }}>
-      <Typography variant="h4" gutterBottom align="center">
+      <TitleBox>
         {tabIndex === 0
           ? "Travel Display Information"
           : "Jeep Information and Map"}
-      </Typography>
-
-      <LoginButton variant="outlined" onClick={() => navigate("/login")}>
-        Login
-      </LoginButton>
+      </TitleBox>
 
       {/* Tabs */}
       <Tabs
@@ -185,49 +205,46 @@ function Main() {
         centered
         textColor="primary"
         indicatorColor="primary"
+        sx={{ marginBottom: 4 }}
       >
         <Tab label="Travel Display" />
         <Tab label="Jeep Map" />
       </Tabs>
 
-      {/* Tab Content */}
+      {/* Travel Display Tab */}
       {tabIndex === 0 && (
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" align="center" gutterBottom>
-              North Bound
-            </Typography>
-            <TableContainer component={Paper}>
+            <GlowingHeader variant="h5">North Bound</GlowingHeader>
+            <StyledTableContainer component={Paper}>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Plate Number</TableCell>
-                    <TableCell>Route Direction</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Departure Time</TableCell>
+                    <StyledTableCell>Plate Number</StyledTableCell>
+                    <StyledTableCell>Route Direction</StyledTableCell>
+                    <StyledTableCell>Status</StyledTableCell>
+                    <StyledTableCell>Departure Time</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>{renderJeeps("North Bound")}</TableBody>
               </Table>
-            </TableContainer>
+            </StyledTableContainer>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" align="center" gutterBottom>
-              South Bound
-            </Typography>
-            <TableContainer component={Paper}>
+            <GlowingHeader variant="h5">South Bound</GlowingHeader>
+            <StyledTableContainer component={Paper}>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Plate Number</TableCell>
-                    <TableCell>Route Direction</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Departure Time</TableCell>
+                    <StyledTableCell>Plate Number</StyledTableCell>
+                    <StyledTableCell>Route Direction</StyledTableCell>
+                    <StyledTableCell>Status</StyledTableCell>
+                    <StyledTableCell>Departure Time</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>{renderJeeps("South Bound")}</TableBody>
               </Table>
-            </TableContainer>
+            </StyledTableContainer>
           </Grid>
         </Grid>
       )}
