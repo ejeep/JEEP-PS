@@ -17,7 +17,14 @@ const viewUsers = async (req, res) => {
 
 // Add User
 const addUser = async (req, res) => {
-  const { Username, Email, Password } = req.body;
+  console.log("Request Body:", req.body);  // Log the entire body
+
+  const { Email, Password, userRole } = req.body;
+  console.log("Received User Role:", userRole);
+
+  if (!['admin', 'manager'].includes(userRole)) {
+    return res.status(400).json({ error: 'Invalid user role.' });
+  }
 
   // Generate random salt
   const salt = crypto.randomBytes(16).toString('hex');
@@ -29,10 +36,10 @@ const addUser = async (req, res) => {
 
     const newUser = new User({
       UserId: newUserId,
-      Username,
       Email,
       Password: hashedPassword,
       Salt: salt,
+      userRole,
     });
 
     await newUser.save();
@@ -43,10 +50,11 @@ const addUser = async (req, res) => {
   }
 };
 
+
 // Edit User
 const editUser = async (req, res) => {
   const { id } = req.params;
-  const { Username, Email, Password } = req.body;
+  const { Email, Password, userRole } = req.body;
 
   try {
     const user = await User.findById(id);
@@ -57,9 +65,13 @@ const editUser = async (req, res) => {
     const salt = user.Salt;
     const hashedPassword = Password ? sha256(Password + salt) : user.Password;
 
+    if (userRole && !['admin', 'manager'].includes(userRole)) {
+      return res.status(400).json({ error: 'Invalid user role.' });
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { Username, Email, Password: hashedPassword },
+      { Email, Password: hashedPassword, userRole },
       { new: true }
     );
 
@@ -69,6 +81,7 @@ const editUser = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
 
 // Delete User
 const deleteUser = async (req, res) => {
@@ -85,6 +98,7 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
 
 module.exports = {
   viewUsers,

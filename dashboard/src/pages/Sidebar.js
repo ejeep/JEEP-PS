@@ -95,12 +95,12 @@ function Sidebar() {
               <span>Jeep Tracker</span>
             </Link>
           </li>
-          <li>
+          {/* <li>
             <Link to="/travel-logs">
               <LocationSearchingIcon />
               <span>Travel Logs</span>
             </Link>
-          </li>
+          </li> */}
           <li>
             <Link to="/reports">
               <Report />
