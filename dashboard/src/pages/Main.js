@@ -4,7 +4,6 @@ import {
   Grid,
   Paper,
   Table,
-  Button,
   TableBody,
   TableCell,
   TableContainer,
@@ -65,7 +64,7 @@ const TitleBox = styled(Box)(({ theme }) => ({
 
 function Main() {
   const [jeeps, setJeeps] = useState([]);
-  const [error, setError] = useState(null);
+ const [error, setError] = useState(null);
   const [tabIndex, setTabIndex] = useState(0); // For tabs
   const [commuterLocation, setCommuterLocation] = useState(null);
   const [jeepLocations, setJeepLocations] = useState([]);
@@ -80,6 +79,22 @@ function Main() {
       console.error("Error fetching jeep locations:", error);
     }
   };
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey && event.key.toLowerCase() === "l") {
+        event.preventDefault(); // Prevent default browser behavior
+        navigate("/login"); // Navigate to the login page
+      }
+    };
+  
+    window.addEventListener("keydown", handleKeyDown);
+  
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [navigate]);
+  
+  
 
   useEffect(() => {
     fetchJeepLocations();
