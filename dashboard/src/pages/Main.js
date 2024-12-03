@@ -23,9 +23,9 @@ import "leaflet/dist/leaflet.css";
 // Table Cell Styles
 const StyledTableCell = styled(TableCell)(({ status }) => ({
   color:
-    status === "Waiting" ? "#ffe600" : // Yellow for "Waiting"
-    status === "En Route" ? "#0fff47" : // Green for "En Route"
-    "#ffffff", // White for other statuses
+    status === "Waiting" ? "#ffeb3b" : // Bright yellow for "Waiting"
+    status === "En Route" ? "#00c853" : // Vivid green for "En Route"
+    "#ffffff", // White for other statuses (readable against green background)
   fontFamily: "monospace",
   fontWeight: "bold",
   fontSize: "1rem",
@@ -33,29 +33,30 @@ const StyledTableCell = styled(TableCell)(({ status }) => ({
 
 // Table Container Styles
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-  backgroundColor: "#1900ff", // Table background color
+  backgroundColor: "#058c42", // Dark green for the table background
   borderRadius: "12px", // Rounded corners
   overflow: "hidden",
 }));
 
 // Header with Glowing Text Effect
 const GlowingHeader = styled(Typography)(({ theme }) => ({
-  color: "#0fff47", // Header text color green
-  backgroundColor: "#1900ff", // Header background color
+  color: "#ffffff", // White text for readability
+  backgroundColor: "#43a047", // Slightly lighter green for contrast
   padding: "10px",
   borderRadius: "8px", // Rounded corners
   textAlign: "center",
-  textShadow: "0 0 10px rgba(40, 167, 69, 0.8), 0 0 20px rgba(40, 167, 69, 0.6)", // Glow effect
+  // Subtle text shadow for glow effect
+  textShadow: "0 0 8px rgba(67, 160, 71, 0.8), 0 0 15px rgba(67, 160, 71, 0.6)",
   marginBottom: "5px",
 }));
 
 // Main Title Styles with Box Header
 const TitleBox = styled(Box)(({ theme }) => ({
-  backgroundColor: "#1900ff", // Match the design theme
-  color: "#0fff47", // Glowing green text
+  backgroundColor: "#28a745", // A complementary green for the title box
+  color: "#ffffff", // White text for good readability
   padding: "20px",
   textAlign: "center",
-  textShadow: "0 0 10px rgba(40, 167, 69, 0.8), 0 0 20px rgba(40, 167, 69, 0.6)",
+  textShadow: "0 0 10px rgba(56, 142, 60, 0.8), 0 0 20px rgba(56, 142, 60, 0.6)", // Glow effect
   fontWeight: "bold",
   fontSize: "1.8rem",
   borderRadius: "8px",
