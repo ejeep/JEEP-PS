@@ -186,8 +186,11 @@ function GPSDataPage() {
                   width: 180,
                   renderCell: (params) => (
                     <Button
-                      variant="contained"
-                      color="primary"
+                      variant="outlined"
+                      style={{
+                        borderColor: "#4CAF50", // Green border
+                        color: "#4CAF50", // Green text
+                      }}
                       onClick={() => handleOpenModal(params.row.arduinoID)} // Open modal when clicking the button
                     >
                       Assign Jeep

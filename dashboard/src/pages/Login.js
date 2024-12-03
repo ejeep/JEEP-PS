@@ -21,7 +21,7 @@ function Login() {
     e.preventDefault();
 
     // Check if credentials match (this should be replaced with an actual authentication check)
-    if (email === "admin@gmail.com" && password === "admin") {
+    if (email === "espejomcosmund@gmail.com" && password === "ejeepps") {
       // Store user data in localStorage (email and a simple token for this example)
       const userData = {
         email,

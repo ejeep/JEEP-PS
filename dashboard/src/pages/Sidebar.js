@@ -112,12 +112,12 @@ function Sidebar() {
 
       <div className="sidebar-footer">
         <ul>
-          <li>
+          {/* <li>
             <Link to="/adminsettings">
               <Settings />
               <span>Settings</span>
             </Link>
-          </li>
+          </li> */}
           <li onClick={handleLogout}>
             <Logout />
             {isOpen && <span>Logout</span>}

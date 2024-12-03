@@ -166,7 +166,10 @@ function Main() {
   };
 
   const filteredJeepLocations = jeepLocations.filter(
-    (jeep) => jeep.condition !== "broken" && jeep.condition !== "maintenance"
+    (jeep) =>
+      jeep.condition !== "broken" &&
+      jeep.condition !== "maintenance" &&
+      jeep.plateNumber // Ensure plateNumber exists
   );
 
   const renderJeeps = (direction) =>

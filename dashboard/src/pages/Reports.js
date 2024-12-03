@@ -51,11 +51,9 @@ function Reports() {
   // Styling for status colors based on the vehicle status
   const getStatusColor = (status) => {
     switch (status) {
-      case "Okay":
+      case "good":
         return "green";
-      case "Under Maintenance":
-        return "orange";
-      case "Unavailable":
+      case "breakdown":
         return "red";
       default:
         return "grey";
@@ -131,9 +129,7 @@ function Reports() {
                     color={
                       report.condition === "good"
                         ? "success"
-                        : report.condition === "maintenance"
-                        ? "warning"
-                        : report.condition === "broken" 
+                        : report.condition === "breakdown" 
                         ? "danger"
                         : "error"
                     }

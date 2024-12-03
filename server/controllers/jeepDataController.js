@@ -134,18 +134,21 @@ const addLocationToJeep = async (req, res) => {
 
 // Delete a jeep
 exports.deleteJeep = async (req, res) => {
-  try {
-    const deletedJeep = await Jeep.findOneAndDelete({
-      plateNumber: req.params.plateNumber,
-    });
+  const { plateNumber } = req.params;
 
+  try {
+    // Find and delete the Jeep
+    const deletedJeep = await Jeep.findOneAndDelete({ plateNumber });
     if (!deletedJeep) {
-      return res.status(404).json({ message: "Jeep not found." });
+      return res.status(404).json({ message: 'Jeep not found' });
     }
 
-    res.status(200).json({ message: "Jeep deleted successfully." });
+    // Find the Location entry with the matching plateNumber and clear it
+    await Location.updateOne({ plateNumber }, { $unset: { plateNumber: "" } });
+
+    res.status(200).json({ message: 'Jeep deleted and plate number cleared' });
   } catch (error) {
-    console.error("Error deleting jeep:", error);
-    res.status(500).json({ message: "Server error. Unable to delete jeep." });
+    console.error('Error deleting Jeep:', error);
+    res.status(500).json({ message: 'Error deleting Jeep' });
   }
 };

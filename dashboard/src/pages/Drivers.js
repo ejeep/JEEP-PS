@@ -133,39 +133,50 @@ function Drivers() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (
-      !formData.name ||
-      !formData.licenseNo ||
-      !formData.contact ||
-      !formData.address
-    ) {
-      showAlert("error", "All fields are required.");
+  
+    // Validation Rules
+    const errors = [];
+    if (!formData.name.trim()) {
+      errors.push("Name is required.");
+    }
+    if (!formData.licenseNo.trim()) {
+      errors.push("License number is required.");
+    }
+    if (!/^\d{10,11}$/.test(formData.contact)) {
+      errors.push("Contact must be 10 or 11 digits long.");
+    }
+    if (!formData.address.trim()) {
+      errors.push("Address is required.");
+    }
+  
+    // Show errors if any
+    if (errors.length > 0) {
+      showAlert("error", errors.join(" "));
       return;
     }
-
+  
     const isDuplicate = drivers.some(
       (driver) =>
         driver.licenseNo.toLowerCase() === formData.licenseNo.toLowerCase() &&
         driver._id !== selectedDriverId // Exclude the current driver being edited
     );
-
+  
     if (isDuplicate) {
       showAlert("error", "This License Number already exists.");
       return;
     }
-
+  
     const formDataToSend = new FormData();
     formDataToSend.append("name", formData.name);
     formDataToSend.append("licenseNo", formData.licenseNo);
     formDataToSend.append("contact", formData.contact);
     formDataToSend.append("address", formData.address);
     formDataToSend.append("status", formData.status);
-
-    const { licenseCopy, idCopy } =
-      formData.documents;
+  
+    const { licenseCopy, idCopy } = formData.documents;
     if (licenseCopy) formDataToSend.append("licenseCopy", licenseCopy);
     if (idCopy) formDataToSend.append("idCopy", idCopy);
-
+  
     try {
       if (selectedDriverId) {
         await axios.put(
@@ -188,6 +199,7 @@ function Drivers() {
       showAlert("error", "An error occurred. Please try again.");
     }
   };
+  
 
   const handleDelete = async (name,driverId) => {
     if (window.confirm("Are you sure you want to delete this driver?")) {
