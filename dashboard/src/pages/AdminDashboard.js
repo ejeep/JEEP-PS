@@ -77,12 +77,20 @@ function AdminDashboard() {
   // Count the jeeps based on their status (excluding broken and maintenance jeeps)
   const countStatus = (status) =>
     jeepLocations.filter(
-      (jeep) => jeep.status === status && jeep.condition !== "broken" && jeep.condition !== "maintenance"
+      (jeep) =>
+        jeep.status === status &&
+        jeep.condition !== "broken" &&
+        jeep.condition !== "maintenance" &&
+        jeep.plateNumber && // Ensures plateNumber exists and is truthy
+        jeep.plateNumber !== "not assigned" // Excludes "not assigned"
     ).length;
-
+  
   // Filter out jeeps that are "broken" or "on maintenance"
   const filteredJeepLocations = jeepLocations.filter(
-    (jeep) => jeep.condition !== "broken" && jeep.condition !== "maintenance"
+    (jeep) =>
+      jeep.condition !== "broken" &&
+      jeep.condition !== "maintenance" &&
+      jeep.plateNumber // Ensure plateNumber exists
   );
 
   // Calculate the total number of active jeeps (not broken or under maintenance)

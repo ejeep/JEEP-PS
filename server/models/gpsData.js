@@ -21,7 +21,7 @@ const LocationSchema = new mongoose.Schema({
   },
   condition: {
     type: String,
-    enum: ['maintenance', 'good', 'broken'], // Condition options: 'maintenance', 'good', 'broken'
+    enum: [, 'good', 'breakdown'], // Condition options: 'maintenance', 'good', 'broken'
     required: true,
   },
   timestamp: { type: Date, default: Date.now }, // Timestamp for the location data
