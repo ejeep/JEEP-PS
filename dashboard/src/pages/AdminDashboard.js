@@ -127,7 +127,7 @@ function AdminDashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <DashboardCard>
             <Typography variant="h6" display="flex" alignItems="center" gap={1}>
-              <BuildIcon /> Maintenance
+              <BuildIcon /> Condition
             </Typography>
             <Typography variant="h4">{countStatus("maintenance")}</Typography>
           </DashboardCard>

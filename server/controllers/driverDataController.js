@@ -83,6 +83,7 @@ const createDriver = async (req, res) => {
       contact: req.body.contact,
       address: req.body.address,
       documents,
+      licenseExpiryDate: req.body.licenseExpiryDate, // Added license expiry date
       status: req.body.status || "Active",
     });
 
@@ -126,6 +127,7 @@ const updateDriver = async (req, res) => {
     driver.contact = req.body.contact || driver.contact;
     driver.address = req.body.address || driver.address;
     driver.status = req.body.status || driver.status;
+    driver.licenseExpiryDate = req.body.licenseExpiryDate || driver.licenseExpiryDate; // Update license expiry date
 
     // Update Documents
     const updatedDocs = req.files || {};
@@ -198,8 +200,6 @@ const getDrivers = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
-
 
 // Multer Error Handling Middleware
 const multerErrorHandler = (error, req, res, next) => {

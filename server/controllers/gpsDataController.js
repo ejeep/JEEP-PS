@@ -1,7 +1,29 @@
-const Location = require('../models/gpsData');
-const CommuterLocation = require('../models/commuterLocation');
-const Jeep = require('../models/jeepData'); // Jeep model
+const Location = require("../models/gpsData");
+const CommuterLocation = require("../models/commuterLocation");
+const Jeep = require("../models/jeepData"); // Jeep model
 
+// Function to calculate distance using Haversine Formula
+const haversineDistance = (coords1, coords2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+
+  const R = 6371e3; // Earth radius in meters
+  const lat1 = toRad(coords1.latitude);
+  const lat2 = toRad(coords2.latitude);
+  const deltaLat = toRad(coords2.latitude - coords1.latitude);
+  const deltaLng = toRad(coords2.longitude - coords1.longitude);
+
+  const a =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
+};
+
+const calculateETA = (distance, speed) => {
+  if (speed <= 0) return Infinity; // Handle edge case of no movement
+  return (distance / speed) / 60; // Return ETA in minutes
+};
 
 exports.commuterLocation = async (req, res) => {
   try {
@@ -10,8 +32,14 @@ exports.commuterLocation = async (req, res) => {
     const { commuterLocation, commuterId } = req.body;
 
     // Ensure commuterLocation exists in the request body
-    if (!commuterLocation || commuterLocation.latitude === undefined || commuterLocation.longitude === undefined) {
-      return res.status(400).json({ message: "Longitude and Latitude are required." });
+    if (
+      !commuterLocation ||
+      commuterLocation.latitude === undefined ||
+      commuterLocation.longitude === undefined
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Longitude and Latitude are required." });
     }
 
     // Find the commuter by commuterId, if provided, or create a new commuter if not
@@ -28,7 +56,9 @@ exports.commuterLocation = async (req, res) => {
       existingCommuter.commuterLocation.timestamp = new Date(); // Update the timestamp
 
       await existingCommuter.save(); // Save the updated commuter location
-      res.status(200).json({ message: "Commuter location updated successfully." });
+      res
+        .status(200)
+        .json({ message: "Commuter location updated successfully." });
     } else {
       // If the commuter does not exist, create a new commuter location
       const newLocation = new CommuterLocation({
@@ -40,7 +70,9 @@ exports.commuterLocation = async (req, res) => {
       });
 
       await newLocation.save(); // Save the new commuter location
-      res.status(201).json({ message: "New commuter location saved successfully." });
+      res
+        .status(201)
+        .json({ message: "New commuter location saved successfully." });
     }
   } catch (error) {
     console.error("Error saving or updating location:", error);
@@ -48,49 +80,9 @@ exports.commuterLocation = async (req, res) => {
   }
 };
 
-
-
 exports.createLocation = async (req, res) => {
   try {
-    const { arduinoID, jeepLocation, speed, seatAvailability, status, direction, condition, timestamp } = req.body;
-
-    // Validate input
-    if (!arduinoID || !jeepLocation || !jeepLocation.lat || !jeepLocation.lng || speed === undefined || seatAvailability === undefined || !status || !direction || !condition) {
-      return res.status(400).json({
-        message: "arduinoID, latitude, longitude, speed, seatAvailability, status, direction, and condition are required.",
-      });
-    }
-
-    // Validate speed
-    if (speed < 0) {
-      return res.status(400).json({ message: "Speed cannot be negative." });
-    }
-
-    // Try to find an existing document with the arduinoID
-    let location = await Location.findOne({ arduinoID });
-
-    // If the location exists, update it
-    if (location) {
-      // Update the existing document
-      location.jeepLocation = jeepLocation;
-      location.speed = speed;
-      location.seatAvailability = seatAvailability;
-      location.status = status;
-      location.direction = direction;
-      location.condition = condition;
-      if (timestamp) {
-        location.timestamp = new Date(timestamp);
-      }
-
-      await location.save(); // Save the updated location
-      return res.status(200).json({
-        message: "Location updated successfully.",
-        data: location,
-      });
-    }
-
-    // If the location does not exist, create a new one
-    const newLocation = new Location({
+    const {
       arduinoID,
       jeepLocation,
       speed,
@@ -98,13 +90,38 @@ exports.createLocation = async (req, res) => {
       status,
       direction,
       condition,
-      timestamp: timestamp ? new Date(timestamp) : Date.now(),
-    });
+      timestamp,
+    } = req.body;
 
-    await newLocation.save(); // Save the new location
+    // Validate input
+    if (!arduinoID || !jeepLocation || !jeepLocation.lat || !jeepLocation.lng || speed === undefined) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    // Retrieve commuter location (for example, the first commuter in your database)
+    const commuter = await CommuterLocation.findOne();
+    if (!commuter) {
+      return res.status(404).json({ message: "No commuter location available." });
+    }
+
+    const commuterCoords = commuter.commuterLocation;
+    const jeepCoords = { latitude: jeepLocation.lat, longitude: jeepLocation.lng };
+
+    // Calculate distance and ETA
+    const distance = haversineDistance(commuterCoords, jeepCoords); // Distance in meters
+    const eta = calculateETA(distance, speed); // ETA in minutes
+
+    // Save or update location logic (existing functionality remains)
+
+    // Include ETA in the response
     res.status(201).json({
       message: "Location created successfully.",
-      data: newLocation,
+      data: {
+        arduinoID,
+        jeepLocation,
+        speed,
+        eta: `${eta.toFixed(2)} minutes`,
+      },
     });
   } catch (error) {
     console.error("Error processing location:", error);
@@ -116,14 +133,35 @@ exports.createLocation = async (req, res) => {
 // Retrieve all location entries
 exports.getAllLocations = async (req, res) => {
   try {
-    const locations = await Location.find(); // Fetch all locations
-    res.status(200).json(locations);
-  } catch (error) {
-    console.error('Error fetching locations:', error);
-    res.status(500).json({
-      message: 'Failed to fetch location data.',
-      error: error.message,
+    const locations = await Location.find();
+    const commuter = await CommuterLocation.findOne();
+
+    if (!commuter) {
+      return res
+        .status(404)
+        .json({ message: "No commuter location available." });
+    }
+
+    const commuterCoords = commuter.commuterLocation;
+
+    const updatedLocations = locations.map((location) => {
+      const jeepCoords = {
+        latitude: location.jeepLocation.lat,
+        longitude: location.jeepLocation.lng,
+      };
+      const distance = haversineDistance(commuterCoords, jeepCoords);
+      const eta = calculateETA(distance, location.speed);
+
+      return {
+        ...location.toObject(),
+        eta: `${eta.toFixed(2)} minutes`,
+      };
     });
+
+    res.status(200).json(updatedLocations);
+  } catch (error) {
+    console.error("Error fetching locations:", error);
+    res.status(500).json({ message: "Failed to fetch location data." });
   }
 };
 
@@ -132,9 +170,9 @@ exports.getCommuterLocation = async (req, res) => {
     const commuterLocation = await CommuterLocation.find(); // Fetch all locations
     res.status(200).json(commuterLocation);
   } catch (error) {
-    console.error('Error fetching commuter location:', error);
+    console.error("Error fetching commuter location:", error);
     res.status(500).json({
-      message: 'Failed to fetch location data.',
+      message: "Failed to fetch location data.",
       error: error.message,
     });
   }
@@ -151,14 +189,16 @@ exports.assignJeepToArduino = async (req, res) => {
     });
 
     if (!jeep) {
-      return res.status(404).json({ message: 'Jeep not found' });
+      return res.status(404).json({ message: "Jeep not found" });
     }
 
     // Find the GPS data entry by arduinoID
     const gpsLocation = await Location.findOne({ arduinoID });
 
     if (!gpsLocation) {
-      return res.status(404).json({ message: 'GPS data not found for this Arduino setup' });
+      return res
+        .status(404)
+        .json({ message: "GPS data not found for this Arduino setup" });
     }
 
     // Assign the jeep's plateNumber to the GPS location (Arduino setup)
@@ -167,18 +207,26 @@ exports.assignJeepToArduino = async (req, res) => {
     // Save the updated GPSLocation document
     await gpsLocation.save();
 
-    return res.status(200).json({ message: 'Jeep successfully assigned to Arduino setup' });
+    return res
+      .status(200)
+      .json({ message: "Jeep successfully assigned to Arduino setup" });
   } catch (error) {
-    console.error('Error assigning jeep:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Error assigning jeep:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 // Update a location entry (no plateNumber)
 exports.updateLocation = async (req, res) => {
   const { arduinoID } = req.params;
-  const { jeepLocation, speed, seatAvailability, status, direction, condition } = req.body;
+  const {
+    jeepLocation,
+    speed,
+    seatAvailability,
+    status,
+    direction,
+    condition,
+  } = req.body;
 
   try {
     const location = await Location.findOneAndUpdate(
@@ -191,23 +239,41 @@ exports.updateLocation = async (req, res) => {
       return res.status(404).json({ message: "Location not found." });
     }
 
-    res.status(200).json({ message: "Location updated successfully.", location });
+    res
+      .status(200)
+      .json({ message: "Location updated successfully.", location });
   } catch (error) {
     console.error("Error updating location:", error);
     res.status(500).json({ error: "Failed to update location." });
   }
 };
 
-
 exports.getCommuterLocation = async (req, res) => {
   try {
     const commuterLocation = await CommuterLocation.find(); // Fetch all locations
     res.status(200).json(commuterLocation);
   } catch (error) {
-    console.error('Error fetching commuter location:', error);
+    console.error("Error fetching commuter location:", error);
     res.status(500).json({
-      message: 'Failed to fetch location data.',
+      message: "Failed to fetch location data.",
       error: error.message,
     });
+  }
+};
+
+exports.deleteLocation = async (req, res) => {
+  const { arduinoID } = req.params; // The unique Arduino ID of the location to delete
+
+  try {
+    const location = await Location.findOneAndDelete({ arduinoID });
+
+    if (!location) {
+      return res.status(404).json({ message: "Location not found." });
+    }
+
+    res.status(200).json({ message: "Location deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting location:", error);
+    res.status(500).json({ message: "Failed to delete location." });
   }
 };

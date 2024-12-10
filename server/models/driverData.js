@@ -51,6 +51,10 @@ const driverSchema = new mongoose.Schema({
     enum: ['Active', 'Inactive', 'Suspended'],
     default: 'Active',
   },
+  licenseExpiryDate: {   // New field for license expiry date
+    type: Date,
+    required: true,  // Mark this field as required if you want to ensure that it is provided
+  },
   createdAt: {
     type: Date,
     default: Date.now,

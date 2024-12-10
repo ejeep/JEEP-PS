@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Menu,
   Dashboard,
@@ -14,11 +14,11 @@ import {
 import "./Sidebar.css";
 import LocationSearchingIcon from "@mui/icons-material/LocationSearching";
 import LogoutModal from "../components/LogoutModal";
+import HistoryIcon from '@mui/icons-material/History';
 
-function Sidebar() {
+function Sidebar({ hasNotification }) {
   const [isOpen, setIsOpen] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
 
   const toggleSidebar = () => {
@@ -95,16 +95,10 @@ function Sidebar() {
               <span>Jeep Tracker</span>
             </Link>
           </li>
-          {/* <li>
-            <Link to="/travel-logs">
-              <LocationSearchingIcon />
-              <span>Travel Logs</span>
-            </Link>
-          </li> */}
           <li>
-            <Link to="/reports">
-              <Report />
-              <span>Reports</span>
+            <Link to="/travel-logs">
+              <HistoryIcon />
+              <span>Travel Logs</span>
             </Link>
           </li>
         </ul>
@@ -112,6 +106,15 @@ function Sidebar() {
 
       <div className="sidebar-footer">
         <ul>
+        <li>
+            <Link to="/reports">
+              <Report />
+              <span>Reports</span>
+              {hasNotification && (
+                <span className="notification-badge">!</span> // Notification badge
+              )}
+            </Link>
+          </li>
           <li>
             <Link to="/adminsettings">
               <Settings />
@@ -125,11 +128,7 @@ function Sidebar() {
         </ul>
       </div>
 
-      <LogoutModal
-        isOpen={showLogoutModal}
-        onConfirm={confirmLogout}
-        onClose={closeModal}
-      />
+      <LogoutModal isOpen={showLogoutModal} onConfirm={confirmLogout} onClose={closeModal} />
     </div>
   );
 }

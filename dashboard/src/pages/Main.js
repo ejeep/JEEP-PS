@@ -21,15 +21,20 @@ import { useNavigate } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 
 // Table Cell Styles
-const StyledTableCell = styled(TableCell)(({ status }) => ({
-  color:
-    status === "Waiting" ? "#ffeb3b" : // Bright yellow for "Waiting"
-    status === "En Route" ? "#00c853" : // Vivid green for "En Route"
-    "#ffffff", // White for other statuses (readable against green background)
-  fontFamily: "monospace",
-  fontWeight: "bold",
-  fontSize: "1rem",
-}));
+const StyledTableCell = styled(TableCell)(({ status }) => {
+  const normalizedStatus = status ? status.toLowerCase() : ""; // Safely handle undefined/null
+  return {
+    color:
+      normalizedStatus === "waiting"
+        ? "#ffeb3b" // Bright yellow for "waiting"
+        : normalizedStatus === "en route"
+        ? "#39FF14" // Vivid green for "en route"
+        : "#ffffff", // White for other statuses (readable against green background)
+    fontFamily: "monospace",
+    fontWeight: "bold",
+    fontSize: "1rem",
+  };
+});
 
 // Table Container Styles
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
@@ -56,7 +61,8 @@ const TitleBox = styled(Box)(({ theme }) => ({
   color: "#ffffff", // White text for good readability
   padding: "20px",
   textAlign: "center",
-  textShadow: "0 0 10px rgba(56, 142, 60, 0.8), 0 0 20px rgba(56, 142, 60, 0.6)", // Glow effect
+  textShadow:
+    "0 0 10px rgba(56, 142, 60, 0.8), 0 0 20px rgba(56, 142, 60, 0.6)", // Glow effect
   fontWeight: "bold",
   fontSize: "1.8rem",
   borderRadius: "8px",
@@ -65,7 +71,7 @@ const TitleBox = styled(Box)(({ theme }) => ({
 
 function Main() {
   const [jeeps, setJeeps] = useState([]);
- const [error, setError] = useState(null);
+  const [error, setError] = useState(null);
   const [tabIndex, setTabIndex] = useState(0); // For tabs
   const [commuterLocation, setCommuterLocation] = useState(null);
   const [jeepLocations, setJeepLocations] = useState([]);
@@ -76,6 +82,15 @@ function Main() {
     try {
       const response = await axios.get("http://localhost:3004/gps/locations");
       setJeepLocations(response.data);
+      setJeeps(
+        response.data.map((jeep) => ({
+          id: jeep.arduinoID, // Assuming `_id` is the unique identifier
+          plateNumber: jeep.plateNumber,
+          direction: jeep.direction,
+          status: jeep.status || "Waiting", // Default status to "Waiting" if not set
+          eta: jeep.eta || "Unavailable", // Include ETA or default to "Unavailable"
+        }))
+      );
     } catch (error) {
       console.error("Error fetching jeep locations:", error);
     }
@@ -87,36 +102,21 @@ function Main() {
         navigate("/login"); // Navigate to the login page
       }
     };
-  
+
     window.addEventListener("keydown", handleKeyDown);
-  
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [navigate]);
-  
-  
 
   useEffect(() => {
     fetchJeepLocations();
-    fetchData();
     getCommuterLocation();
 
-    const interval = setInterval(fetchJeepLocations, 600000); // Update every 10 minutes
+    const interval = setInterval(fetchJeepLocations, 120000); // Update every 2 minutes
     return () => clearInterval(interval);
   }, []);
-
-  const fetchData = async () => {
-    try {
-      const jeepsResponse = await axios.get(
-        "http://localhost:3004/jeep-data/jeeps"
-      );
-      setJeeps(jeepsResponse.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setError("Failed to load data.");
-    }
-  };
 
   const getCommuterLocation = debounce(async () => {
     if (navigator.geolocation) {
@@ -124,7 +124,7 @@ function Main() {
         async (position) => {
           const { latitude, longitude } = position.coords;
 
-          const commuterPayload = { latitude, longitude }; // Flatten payload
+          const commuterPayload = { commuterLocation: { latitude, longitude } }; // Flatten payload
 
           try {
             const response = await axios.put(
@@ -136,7 +136,7 @@ function Main() {
             console.log("Server response:", response.data);
 
             // Update local state with commuter location
-            setCommuterLocation(commuterPayload);
+            setCommuterLocation(commuterPayload.commuterLocation);
             setError(null); // Reset any previous errors
           } catch (error) {
             console.error(
@@ -174,16 +174,17 @@ function Main() {
 
   const renderJeeps = (direction) =>
     jeeps
-      .filter((jeep) => jeep.routeDirection === direction)
+      .filter(
+        (jeep) => jeep.direction.toLowerCase() === direction.toLowerCase()
+      )
       .map((jeep) => (
         <TableRow key={jeep.id}>
           <StyledTableCell>{jeep.plateNumber}</StyledTableCell>
-          <StyledTableCell>{jeep.routeDirection}</StyledTableCell>
+          <StyledTableCell>{jeep.direction}</StyledTableCell>
           <StyledTableCell status={jeep.status}>{jeep.status}</StyledTableCell>
-          <StyledTableCell>{jeep.timeSchedule}</StyledTableCell>
+          <StyledTableCell>{jeep.eta}</StyledTableCell>
         </TableRow>
       ));
-
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -234,7 +235,9 @@ function Main() {
       {tabIndex === 0 && (
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
-            <GlowingHeader variant="h5">North Bound</GlowingHeader>
+            <GlowingHeader variant="h5">
+              North Bound (Solano - Lagawe)
+            </GlowingHeader>
             <StyledTableContainer component={Paper}>
               <Table>
                 <TableHead>
@@ -242,7 +245,7 @@ function Main() {
                     <StyledTableCell>Plate Number</StyledTableCell>
                     <StyledTableCell>Route Direction</StyledTableCell>
                     <StyledTableCell>Status</StyledTableCell>
-                    <StyledTableCell>Departure Time</StyledTableCell>
+                    <StyledTableCell>ETA</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>{renderJeeps("North Bound")}</TableBody>
@@ -250,7 +253,9 @@ function Main() {
             </StyledTableContainer>
           </Grid>
           <Grid item xs={12} md={6}>
-            <GlowingHeader variant="h5">South Bound</GlowingHeader>
+            <GlowingHeader variant="h5">
+              South Bound (Lagawe - Solano)
+            </GlowingHeader>
             <StyledTableContainer component={Paper}>
               <Table>
                 <TableHead>
@@ -258,7 +263,7 @@ function Main() {
                     <StyledTableCell>Plate Number</StyledTableCell>
                     <StyledTableCell>Route Direction</StyledTableCell>
                     <StyledTableCell>Status</StyledTableCell>
-                    <StyledTableCell>Departure Time</StyledTableCell>
+                    <StyledTableCell>ETA</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>{renderJeeps("South Bound")}</TableBody>
@@ -283,7 +288,7 @@ function Main() {
                   </Typography>
                   <Typography>Status: {selectedJeep.status}</Typography>
                   <Typography>Direction: {selectedJeep.direction}</Typography>
-                  <Typography>Condition: {selectedJeep.condition}</Typography>
+                  <Typography>ETA: {selectedJeep.eta}</Typography>
                   <Typography>
                     Last Updated:{" "}
                     {new Date(selectedJeep.timestamp).toLocaleString()}
@@ -334,7 +339,7 @@ function Main() {
                         <strong>Direction:</strong> {jeep.direction}
                       </Typography>
                       <Typography variant="subtitle2">
-                        <strong>Condition:</strong> {jeep.condition}
+                        <strong>ETA:</strong> {jeep.eta}
                       </Typography>
                       <Typography variant="caption">
                         <strong>Last Updated:</strong>{" "}

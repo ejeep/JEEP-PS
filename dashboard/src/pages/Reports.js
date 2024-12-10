@@ -14,39 +14,52 @@ import {
   Button,
   Badge,
   Tooltip,
+  Popover,
+  List,
+  ListItem,
+  ListItemText,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import { Visibility, VisibilityOff, FileDownload } from "@mui/icons-material";
+import { Notifications } from "@mui/icons-material";
 import axios from "axios";
 import "./Reports.css";
 
-function Reports() {
+function Reports({ setHasNotification }) {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [failCount, setFailCount] = useState(0);  // Track failed attempts
+  const [openSnackbar, setOpenSnackbar] = useState(false);  // For Snackbar visibility
+  const [anchorEl, setAnchorEl] = useState(null);  // For Popover (notification dropdown)
+  const [notifications, setNotifications] = useState([]); // Store notifications
 
   // Fetch the data from the backend API when the component is mounted
   useEffect(() => {
     const fetchReportsData = async () => {
       try {
-        const response = await axios.get("http://localhost:3004/gps/locations"); // Replace with your actual API endpoint
+        const response = await axios.get("http://localhost:3004/gps/locations");
         setReports(response.data); // Set the fetched data into the reports state
         setLoading(false);
+        setFailCount(0); // Reset the fail count on success
       } catch (error) {
         setError("Failed to load vehicle data.");
         setLoading(false);
+        setFailCount(prevCount => prevCount + 1); // Increment the fail count
+
+        // If we reach 3 failed attempts, show a notification
+        if (failCount + 1 === 3) {
+          setNotifications((prevNotifications) => [
+            ...prevNotifications,
+            "No location received 3 times! Please check the GPS connection.",
+          ]);
+          setOpenSnackbar(true);
+        }
       }
     };
 
     fetchReportsData();
-  }, []);
-
-  // Function to toggle the read status of a report
-  const toggleReadStatus = (index) => {
-    const updatedReports = reports.map((report, i) =>
-      i === index ? { ...report, isRead: !report.isRead } : report
-    );
-    setReports(updatedReports);
-  };
+  }, [failCount, setHasNotification]); // Depend on failCount to keep track of failures
 
   // Styling for status colors based on the vehicle status
   const getStatusColor = (status) => {
@@ -61,9 +74,22 @@ function Reports() {
   };
 
   const handleGenerateReport = () => {
-    // Implement your report generation logic here (e.g., download as CSV/PDF)
     console.log("Report Generated");
   };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);  // Close the Snackbar when clicked
+  };
+
+  const handleClickNotification = (event) => {
+    setAnchorEl(event.currentTarget); // Open Popover on bell click
+  };
+
+  const handleClosePopover = () => {
+    setAnchorEl(null); // Close Popover
+  };
+
+  const open = Boolean(anchorEl);  // Check if Popover is open
 
   if (loading) {
     return (
@@ -94,10 +120,51 @@ function Reports() {
         variant="h4"
         gutterBottom
         align="center"
-        sx={{ fontWeight: "bold", mb: 4 }}
+        sx={{ mb: 4 }}
       >
-        Vehicle Management Reports
+        Vehicle Reports
       </Typography>
+
+      {/* Notification Bell Icon */}
+      <IconButton
+        onClick={handleClickNotification}
+        sx={{ position: "absolute", top: 16, right: 16 }}
+      >
+        <Badge
+          badgeContent={notifications.length} // Display number of unread notifications
+          color="error"
+        >
+          <Notifications />
+        </Badge>
+      </IconButton>
+
+      {/* Popover for Notifications */}
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClosePopover}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+      >
+        <Paper sx={{ width: 250, padding: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Notifications
+          </Typography>
+          <List>
+            {notifications.map((notification, index) => (
+              <ListItem key={index}>
+                <ListItemText primary={notification} />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
+      </Popover>
 
       <TableContainer component={Paper} className="table-container">
         <Table sx={{ minWidth: 650 }} aria-label="vehicle management table">
@@ -109,7 +176,7 @@ function Reports() {
                 Seat Availability
               </TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Route Direction</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Condition</TableCell>              
+              <TableCell sx={{ fontWeight: "bold" }}>Condition</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -129,7 +196,7 @@ function Reports() {
                     color={
                       report.condition === "good"
                         ? "success"
-                        : report.condition === "breakdown" 
+                        : report.condition === "breakdown"
                         ? "danger"
                         : "error"
                     }
@@ -144,8 +211,20 @@ function Reports() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Snackbar to show the notification */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="warning">
+          No location received 3 times! Please check the GPS connection.
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
 
 export default Reports;
+

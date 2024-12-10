@@ -17,7 +17,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import { Visibility, VisibilityOff } from "@mui/icons-material"; // Password visibility icons
+import { Visibility, VisibilityOff } from "@mui/icons-material"; // password visibility icons
 import { sha256 } from "js-sha256"; // For password hashing
 import "./AdminSettings.css";
 
@@ -46,6 +46,10 @@ const AdminSettings = () => {
   });
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [formErrors, setFormErrors] = useState({
+    password: "",
+    userRole: "",
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -67,6 +71,23 @@ const AdminSettings = () => {
 
   const hashPassword = (password) => sha256(password);
 
+  const validateForm = () => {
+    let errors = {};
+    const { password, userRole } = formData;
+
+    if (password && password.length < 6) {
+      errors.password = "Password must be at least 6 characters long.";
+    }
+
+    if (!userRole && formData.userRole !== "") {
+      errors.userRole = "User role cannot be empty.";
+    }
+
+    setFormErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+
   const handleAddUser = async () => {
     const { email, password, confirmPassword, userRole } = formData;
 
@@ -75,15 +96,19 @@ const AdminSettings = () => {
       return;
     }
 
+    if (!validateForm()) {
+      return;
+    }
+
     const hashedPassword = hashPassword(password);
-    const normalizedRole = userRole.toLowerCase(); // Ensure it is lowercase
+    const normalizedRole = userRole ? userRole.toLowerCase() : null; // Nullable role
 
     try {
       const response = await axios.post(
         "http://localhost:3004/users/addUser",
         {
-          Email: email,
-          Password: hashedPassword,
+          email: email,
+          password: hashedPassword,
           userRole: normalizedRole,
         },
         {
@@ -109,15 +134,21 @@ const AdminSettings = () => {
 
   const handleEditUser = async () => {
     const { email, password, userRole } = formData;
+  
+    if (password && password.length < 6) {
+      alert("Password must be at least 6 characters long.");
+      return;
+    }
+  
     const hashedPassword = password ? hashPassword(password) : "";
-
+  
     try {
       await axios.put(
         `http://localhost:3004/users/editUser/${selectedUser._id}`,
         {
-          Email: email,
-          Password: hashedPassword || selectedUser.Password,
-          UserRole: userRole,
+          email: email,
+          password: hashedPassword || selectedUser.password,
+          userRole: userRole ? userRole.toLowerCase() : selectedUser.userRole.toLowerCase(), // Ensure userRole is lowercase
         }
       );
       fetchUsers();
@@ -126,6 +157,7 @@ const AdminSettings = () => {
       console.error("Error editing user:", error);
     }
   };
+  
 
   const handleDeleteUser = async () => {
     try {
@@ -142,10 +174,10 @@ const AdminSettings = () => {
   const handleEditClick = (user) => {
     setSelectedUser(user);
     setFormData({
-      email: user.Email,
+      email: user.email,
       password: "",
       confirmPassword: "",
-      userRole: user.UserRole,
+      userRole: user.UserRole || "",
     });
     setIsEditModalOpen(true);
   };
@@ -164,13 +196,13 @@ const AdminSettings = () => {
       <Typography variant="h4" sx={{ mb: 2 }}>
         Admin Settings
       </Typography>
-      <Button
+      {/* <Button
         variant="contained"
         onClick={() => setIsAddModalOpen(true)}
         style={{ backgroundColor: "#4CAF50" }}
       >
         <b>+ ADD USER</b>
-      </Button>
+      </Button> */}
 
       <TableContainer component={Paper} sx={{ mt: 2 }}>
         <Table>
@@ -197,16 +229,18 @@ const AdminSettings = () => {
             {users.map((user) => (
               <TableRow key={user._id}>
                 <TableCell>{user.UserId}</TableCell>
-                <TableCell>{user.Email}</TableCell>
+                <TableCell>{user.email}</TableCell>
                 <TableCell>{user.userRole}</TableCell>
-                <TableCell style={{
-                                    maxWidth: '150px',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'auto',
-                                    textOverflow: 'ellipsis',
-                                }}>
-                                    {'●'.repeat(user.Password.length)}
-                                </TableCell>
+                <TableCell
+                  style={{
+                    maxWidth: "150px",
+                    whiteSpace: "nowrap",
+                    overflow: "auto",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {"●".repeat(user.password.length)}
+                </TableCell>
 
                 <TableCell>
                   <IconButton onClick={() => handleEditClick(user)}>
@@ -254,6 +288,11 @@ const AdminSettings = () => {
               ),
             }}
           />
+          {formErrors.password && (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              {formErrors.password}
+            </Typography>
+          )}
           <TextField
             label="Confirm Password"
             type={showPassword ? "text" : "password"}
@@ -272,25 +311,25 @@ const AdminSettings = () => {
             onChange={handleInputChange}
             sx={{ mt: 2 }}
           >
-            <MenuItem value="admin">Admin</MenuItem>
-            <MenuItem value="manager">Manager</MenuItem>
+            <MenuItem value="">None</MenuItem> {/* Allow clearing the role */}
+            <MenuItem value="Admin">Admin</MenuItem>
           </TextField>
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Button
-              variant="contained"
-              onClick={handleAddUser}
-              sx={{ backgroundColor: "#4CAF50", fontWeight: "bold" }}
-            >
-              SAVE
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => setIsAddModalOpen(false)}
-              sx={{ color: "#f44336", borderColor: "#f44336", ml: 2 }}
-            >
-              CANCEL
-            </Button>
-          </Box>
+          {formErrors.userRole && (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              {formErrors.userRole}
+            </Typography>
+          )}
+          <Button
+            variant="contained"
+            sx={{
+              mt: 2,
+              backgroundColor: "#4CAF50", // Green background
+              color: "#fff",
+            }}
+            onClick={handleAddUser}
+          >
+            Add User
+          </Button>
         </Box>
       </Modal>
 
@@ -322,6 +361,20 @@ const AdminSettings = () => {
               ),
             }}
           />
+          {formErrors.password && (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              {formErrors.password}
+            </Typography>
+          )}
+          <TextField
+            label="Confirm Password"
+            type={showPassword ? "text" : "password"}
+            fullWidth
+            value={formData.confirmPassword}
+            name="confirmPassword"
+            onChange={handleInputChange}
+            sx={{ mt: 2 }}
+          />
           <TextField
             label="User Role"
             fullWidth
@@ -331,53 +384,46 @@ const AdminSettings = () => {
             onChange={handleInputChange}
             sx={{ mt: 2 }}
           >
+            <MenuItem value="">None</MenuItem> {/* Allow clearing the role */}
             <MenuItem value="Admin">Admin</MenuItem>
-            <MenuItem value="Manager">Manager</MenuItem>
           </TextField>
-
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Button
-              variant="contained"
-              onClick={handleEditUser}
-              sx={{ backgroundColor: "#4CAF50", fontWeight: "bold" }}
-            >
-              SAVE
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => setIsEditModalOpen(false)}
-              sx={{ color: "#f44336", borderColor: "#f44336", ml: 2 }}
-            >
-              CANCEL
-            </Button>
-          </Box>
+          {formErrors.userRole && (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              {formErrors.userRole}
+            </Typography>
+          )}
+          <Button
+            variant="contained"
+            sx={{
+              mt: 2,
+              backgroundColor: "#4CAF50", // Green background
+              color: "#fff",
+            }}
+            onClick={handleEditUser}
+          >
+            Save Changes
+          </Button>
         </Box>
       </Modal>
 
-      {/* Delete User Modal */}
+      {/* Delete Confirmation Modal */}
       <Modal
         open={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
       >
         <Box sx={modalStyle}>
-          <Typography variant="h6" align="center">
+          <Typography variant="h6">Delete User</Typography>
+          <Typography variant="body1" sx={{ mt: 2 }}>
             Are you sure you want to delete this user?
           </Typography>
-          <Box
-            sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 3 }}
-          >
+          <Box sx={{ mt: 2, display: "flex", justifyContent: "space-between" }}>
+            <Button onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
             <Button
               variant="contained"
               color="error"
               onClick={handleDeleteUser}
             >
-              DELETE
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => setIsDeleteModalOpen(false)}
-            >
-              CANCEL
+              Delete
             </Button>
           </Box>
         </Box>

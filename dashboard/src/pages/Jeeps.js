@@ -31,7 +31,7 @@ function Jeeps() {
   const [formData, setFormData] = useState({
     plateNumber: "",
     model: "",
-    routeDirection: "North Bound",
+    routeDirection: "South Bound",
   });
   const [jeeps, setJeeps] = useState([]);
   const [drivers, setDrivers] = useState([]);
@@ -472,8 +472,8 @@ function Jeeps() {
             onChange={handleChange}
             style={{ marginBottom: "20px" }}
           >
-            <MenuItem value="North Bound">North Bound</MenuItem>
-            <MenuItem value="South Bound">South Bound</MenuItem>
+            <MenuItem value="North Bound">North Bound (Solano-Lagawe)</MenuItem>
+            <MenuItem value="South Bound">South Bound (Lagawe-Solano)</MenuItem>
           </TextField>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Button

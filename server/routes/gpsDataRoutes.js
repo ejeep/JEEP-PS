@@ -10,5 +10,6 @@ router.get('/locations', locationController.getAllLocations);
 // router.get('/eta', locationController.calculateETA);
 router.get('/display-commuter-location', locationController.getCommuterLocation);
 router.put('/assign-vehicle/:arduinoID', locationController.assignJeepToArduino);    
+router.delete('/locations/:arduinoID', locationController.deleteLocation);
 
 module.exports = router;

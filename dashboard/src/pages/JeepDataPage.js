@@ -53,7 +53,9 @@ function GPSDataPage() {
 
     const fetchPlateNumbers = async () => {
       try {
-        const response = await axios.get("http://localhost:3004/jeep-data/jeeps");
+        const response = await axios.get(
+          "http://localhost:3004/jeep-data/jeeps"
+        );
         setPlateNumbers(response.data);
       } catch (error) {
         console.error("Error fetching plate numbers:", error);
@@ -88,38 +90,58 @@ function GPSDataPage() {
         `http://localhost:3004/gps/assign-vehicle/${arduinoID}`,
         { plateNumber }
       );
-  
-      // Success: Update the snackbar message and show it
+
       setSnackbarMessage(response.data.message);
       setSnackbarSeverity("success");
-      setSnackbarOpen(true); // Show the Snackbar
-  
-      // Re-fetch the GPS data to ensure the table is updated
-      const updatedGPSData = await axios.get("http://localhost:3004/gps/locations");
+      setSnackbarOpen(true);
+
+      const updatedGPSData = await axios.get(
+        "http://localhost:3004/gps/locations"
+      );
       setGPSData(updatedGPSData.data);
-      setFilteredData(updatedGPSData.data);  // Update filtered data as well
-  
-      // Close the modal after successful assignment
+      setFilteredData(updatedGPSData.data);
+
       setOpenModal(false);
     } catch (error) {
-      // Error: Show an error message in the Snackbar
       setSnackbarMessage("Failed to assign jeep.");
       setSnackbarSeverity("error");
-      setSnackbarOpen(true); // Show the Snackbar
+      setSnackbarOpen(true);
     }
   };
-  
 
-  // Dynamically update the rows for DataGrid whenever gpsData changes
+  // Function to handle deleting a GPS data entry
+  const handleDelete = async (arduinoID) => {
+    try {
+      const response = await axios.delete(
+        `http://localhost:3004/gps/locations/${arduinoID}`
+      );
+
+      setSnackbarMessage(response.data.message);
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+
+      // Remove the deleted entry from the GPS data state
+      const updatedGPSData = gpsData.filter(
+        (data) => data.arduinoID !== arduinoID
+      );
+      setGPSData(updatedGPSData);
+      setFilteredData(updatedGPSData); // Update filtered data as well
+    } catch (error) {
+      setSnackbarMessage("Failed to delete GPS data.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
+
   const rows = filteredData
-    .filter((data) => data.arduinoID) // Ensure only rows with arduinoID are included
+    .filter((data) => data.arduinoID)
     .map((data) => ({
-      id: data.arduinoID, // Ensure each row has an 'id' field
+      id: data.arduinoID,
       arduinoID: data.arduinoID,
       direction: data.direction,
       seatAvailability: data.seatAvailability,
       status: data.status,
-      plateNumber: data.plateNumber || "Not Assigned", // Default text when no plate number assigned
+      plateNumber: data.plateNumber || "Not Assigned",
     }));
 
   if (loading) {
@@ -144,23 +166,26 @@ function GPSDataPage() {
         Jeepney GPS Tracker
       </Typography>
 
-      <Box sx={{ marginBottom: 2, textAlign: "center" }}>
-        <TextField
-          variant="outlined"
-          placeholder="Search by Jeep ID"
-          value={searchQuery}
-          onChange={handleSearch}
-          sx={{
-            width: "300px",
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            marginRight: "16px",
-          }}
-        />
-      </Box>
+      <Grid container justifyContent="space-between" alignItems="center">
+        <Grid item></Grid>
+        <Grid item>
+          <TextField
+            variant="outlined"
+            placeholder="Search by Jeep ID"
+            value={searchQuery}
+            onChange={handleSearch}
+            sx={{
+              mb: 2,
+              width: "300px",
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              marginRight: "16px",
+            }}
+          />
+        </Grid>
+      </Grid>
 
       <Grid container spacing={4}>
-        {/* DataGrid Section */}
         <Grid item xs={12}>
           <Paper elevation={3}>
             <DataGrid
@@ -168,11 +193,11 @@ function GPSDataPage() {
               columns={[
                 { field: "arduinoID", headerName: "Arduino ID", width: 150 },
                 {
-                  field: "plateNumber", // New column to display the plate number
+                  field: "plateNumber",
                   headerName: "Plate Number",
                   width: 180,
                   renderCell: (params) => (
-                    <Typography variant="body1">
+                    <Typography variant="body1" style={{ marginTop: "12px" }}>
                       {params.row.plateNumber || "Not Assigned"}
                     </Typography>
                   ),
@@ -183,30 +208,43 @@ function GPSDataPage() {
                 {
                   field: "action",
                   headerName: "Action",
-                  width: 180,
+                  width: 350,
                   renderCell: (params) => (
-                    <Button
-                      variant="outlined"
-                      style={{
-                        borderColor: "#4CAF50", // Green border
-                        color: "#4CAF50", // Green text
-                      }}
-                      onClick={() => handleOpenModal(params.row.arduinoID)} // Open modal when clicking the button
-                    >
-                      Assign Jeep
-                    </Button>
+                    <Box>
+                      <Button
+                        variant="outlined"
+                        style={{
+                          borderColor: "#4CAF50",
+                          color: "#4CAF50",
+                        }}
+                        onClick={() => handleOpenModal(params.row.arduinoID)}
+                      >
+                        Assign Jeep
+                      </Button>
+                      <span style={{ margin: "0 8px" }}></span>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        style={{
+                          borderColor: "#f44336",
+                          color: "#f44336",
+                        }}
+                        onClick={() => handleDelete(params.row.arduinoID)}
+                      >
+                        Remove Tracker
+                      </Button>
+                    </Box>
                   ),
                 },
               ]}
               pageSize={5}
-              getRowId={(row) => row.id} // This ensures the DataGrid uses `arduinoID` as the unique id
+              getRowId={(row) => row.id}
               disableSelectionOnClick
             />
           </Paper>
         </Grid>
       </Grid>
 
-      {/* Modal for Plate Number Selection */}
       <Dialog open={openModal} onClose={handleCloseModal}>
         <DialogTitle>Select Plate Number</DialogTitle>
         <DialogContent>
@@ -225,21 +263,29 @@ function GPSDataPage() {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseModal} color="secondary">
+          <Button
+            onClick={handleCloseModal}
+            style={{
+              borderColor: "#4CAF50", // Green border for Cancel
+              color: "#4CAF50", // Green text
+            }}
+          >
             Cancel
           </Button>
           <Button
             onClick={() =>
               handleAssignJeep(selectedArduinoID, selectedPlateNumber)
             }
-            color="primary"
+            style={{
+              backgroundColor: "#4CAF50", // Green background for Assign Driver
+              color: "#fff", // White text
+            }}
           >
             Assign Jeep
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for displaying success/error messages */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}

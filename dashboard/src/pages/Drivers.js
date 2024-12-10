@@ -36,6 +36,7 @@ function Drivers() {
   const [formData, setFormData] = useState({
     name: "",
     licenseNo: "",
+    licenseExpiryDate: "",
     contact: "",
     address: "",
     documents: {
@@ -94,6 +95,7 @@ function Drivers() {
       setFormData({
         name: driver.name,
         licenseNo: driver.licenseNo,
+        licenseExpiryDate: driver.licenseExpiryDate || "",
         contact: driver.contact,
         address: driver.address,
         documents: driver.documents || {},
@@ -115,6 +117,7 @@ function Drivers() {
     setFormData({
       name: "",
       licenseNo: "",
+      licenseExpiryDate: "",
       contact: "",
       address: "",
       documents: {
@@ -148,6 +151,9 @@ function Drivers() {
     if (!formData.address.trim()) {
       errors.push("Address is required.");
     }
+    if (!formData.licenseExpiryDate.trim()) {
+      errors.push("License expiry date is required.");
+    }
   
     // Show errors if any
     if (errors.length > 0) {
@@ -169,6 +175,7 @@ function Drivers() {
     const formDataToSend = new FormData();
     formDataToSend.append("name", formData.name);
     formDataToSend.append("licenseNo", formData.licenseNo);
+    formDataToSend.append("licenseExpiryDate", formData.licenseExpiryDate);
     formDataToSend.append("contact", formData.contact);
     formDataToSend.append("address", formData.address);
     formDataToSend.append("status", formData.status);
@@ -247,9 +254,23 @@ function Drivers() {
 
   const columns = [
     { field: "name", headerName: "Name", width: 200 },
-    { field: "licenseNo", headerName: "License No.", width: 180 },
-    { field: "contact", headerName: "Contact", width: 180 },
-    { field: "address", headerName: "Address", width: 450 },
+    { field: "licenseNo", headerName: "License No.", width: 130 },
+    {
+      field: "licenseExpiryDate",
+      headerName: "License Expiry (DD/MM/YYYY)",
+      width: 225,
+      renderCell: (params) => {
+        const date = new Date(params.row.licenseExpiryDate);
+        const formattedDate = new Intl.DateTimeFormat("en-GB").format(date); // en-GB for dd/mm/yyyy format
+        return (
+          <Typography sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+            {formattedDate}
+          </Typography>
+        );
+      },
+    },
+    { field: "contact", headerName: "Contact", width: 150 },
+    { field: "address", headerName: "Address", width: 325 },
     { field: "status", headerName: "Status", width: 125 },
     {
       field: "actions",
@@ -349,6 +370,17 @@ function Drivers() {
               margin="normal"
               required
             />
+            <TextField
+                label="License Expiry Date"
+                variant="outlined"
+                type="date"
+                fullWidth
+                name="licenseExpiryDate"
+                value={formData.licenseExpiryDate}
+                onChange={handleChange}
+                required
+                InputLabelProps={{ shrink: true }}
+              />
             <TextField
               fullWidth
               label="Contact"

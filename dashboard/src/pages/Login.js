@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios'; // Import axios
 import './Login.css';
 
 function Login() {
@@ -12,28 +13,42 @@ function Login() {
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      // Redirect to the admin dashboard if the user is already logged in
+      // Redirect to the dashboard if the user is already logged in
       navigate("/dashboard");
     }
   }, [navigate]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Send a POST request to your backend for authentication
+  try {
+    const response = await axios.post('http://localhost:3004/users/login', {
+      email,
+      password,
+    });
 
-    // Check if credentials match (this should be replaced with an actual authentication check)
-    if (email === "espejomcosmund@gmail.com" && password === "ejeepps") {
-      // Store user data in localStorage (email and a simple token for this example)
-      const userData = {
-        email,
-        token: "admin-token", // A simple static token; in real apps, use a JWT or something more secure
-      };
-      localStorage.setItem('user', JSON.stringify(userData)); // Store user data
+    if (response.data.success) {
+      // If login is successful, store user data and token in localStorage
+      const { user } = response.data;
+      console.log('User data:', user);  // Debugging the user object
+      localStorage.setItem('user', JSON.stringify(user));
 
-      navigate("/dashboard"); // Redirect to AdminDashboard
+      // Redirect to the appropriate dashboard based on the user role
+      if (user.userRole === 'admin') {
+        navigate("/dashboard");        
+      } else {
+        navigate("/");
+      }
     } else {
-      setError("Invalid email or password");
+      setError(response.data.message || "Invalid email or password");
     }
-  };
+  } catch (error) {
+    console.error("Login error:", error);
+    setError("There was an error logging in. Please try again.");
+  }
+};
+
 
   return (
     <div className="login-container">

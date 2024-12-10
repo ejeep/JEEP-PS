@@ -271,7 +271,7 @@ function Schedule() {
         aria-describedby="schedule-modal-description"
       >
         <Box sx={{ ...style, width: 400 }}>
-          <Typography id="schedule-modal-title" variant="h6" component="h2">
+          <Typography id="schedule-modal-title" variant="h6" component="h2" >
             Assign Schedule for {selectedJeep?.plateNumber}
           </Typography>
           <TextField

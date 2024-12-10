@@ -1,4 +1,3 @@
-// src/pages/Travel.js
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -14,7 +13,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import axios from "axios";
-import "./Travels.css"; // Import the CSS file for additional styling
+import "./Travels.css";
 
 function Travel() {
   const [jeeps, setJeeps] = useState([]);
@@ -25,16 +24,15 @@ function Travel() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const jeepsResponse = await axios.get("http://localhost:3004/jeep-data/jeeps");
+        const response = await axios.get("http://localhost:3004/gps/locations");
 
-        // Set jeeps data with relevant fields (plate number, direction, status)
+        // Set jeeps data with relevant fields (plateNumber, direction, status)
         setJeeps(
-          jeepsResponse.data.map((jeep) => ({
-            id: jeep.id,
+          response.data.map((jeep) => ({
+            id: jeep.arduinoID, // Assuming `_id` is the unique identifier
             plateNumber: jeep.plateNumber,
-            routeDirection: jeep.routeDirection,
+            direction: jeep.direction,
             status: jeep.status || "Waiting", // Default status to "Waiting" if not set
-            timeSchedule: jeep.timeSchedule,
           }))
         );
         setLoading(false);
@@ -48,15 +46,14 @@ function Travel() {
     fetchData();
   }, []);
 
-  // Render the jeeps based on their direction (North/South Bound)
+  // Render jeeps based on their direction
   const renderJeeps = (direction) =>
     jeeps
-      .filter((jeep) => jeep.routeDirection === direction)
+      .filter((jeep) => jeep.direction.toLowerCase() === direction.toLowerCase())
       .map((jeep) => (
         <TableRow key={jeep.id}>
           <TableCell>{jeep.plateNumber}</TableCell>
-          <TableCell>{jeep.routeDirection}</TableCell>
-          <TableCell>{jeep.timeSchedule}</TableCell>
+          <TableCell>{jeep.direction}</TableCell>
           <TableCell>{jeep.status}</TableCell>
         </TableRow>
       ));
@@ -99,12 +96,11 @@ function Travel() {
               <TableHead>
                 <TableRow style={{ backgroundColor: "#3E8E41", color: "#fff" }}>
                   <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Plate Number</TableCell>
-                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Route Direction</TableCell>
-                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Departure Time</TableCell>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Direction</TableCell>
                   <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Status</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>{renderJeeps("North Bound")}</TableBody>
+              <TableBody>{renderJeeps("north bound")}</TableBody>
             </Table>
           </TableContainer>
         </Grid>
@@ -122,12 +118,11 @@ function Travel() {
               <TableHead>
                 <TableRow style={{ backgroundColor: "#3E8E41", color: "#fff" }}>
                   <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Plate Number</TableCell>
-                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Route Direction</TableCell>
-                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Departure Time</TableCell>
+                  <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Direction</TableCell>
                   <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Status</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>{renderJeeps("South Bound")}</TableBody>
+              <TableBody>{renderJeeps("south bound")}</TableBody>
             </Table>
           </TableContainer>
         </Grid>
