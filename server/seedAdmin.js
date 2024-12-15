@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const User = require('./models/User'); // Adjust the path as needed
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/Jeep-PS';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Jeep-PS:bdgVmQbzmPRn1FBr@jeepps.mwxa4.mongodb.net/?retryWrites=true&w=majority&appName=JeepPS';
 
 const connectToDatabase = async () => {
   try {
