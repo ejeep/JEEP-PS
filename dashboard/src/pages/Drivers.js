@@ -22,9 +22,10 @@ import {
   DialogContentText,
   DialogTitle as MuiDialogTitle,
 } from "@mui/material";
-import { Edit, Delete, Add, Search } from "@mui/icons-material";
+import { Edit, Delete, Add, Search, Notifications } from "@mui/icons-material";
 import axios from "axios";
 import { DataGrid } from "@mui/x-data-grid";
+import { useNotification } from "./Notification";
 
 const API_BASE_URL = "http://localhost:3004";
 
@@ -51,6 +52,9 @@ function Drivers() {
   const [alertMessage, setAlertMessage] = useState({ type: "", message: "" });
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [licenseExpiryNotifications, setLicenseExpiryNotifications] = useState([]); // State for notifications
+   const { notificationDots, setNotificationDots } = useNotification();
+  const [isNotificationDotVisible, setNotificationDotVisible] = useState(false); // Dot indicator
 
   useEffect(() => {
     fetchDrivers();
@@ -59,9 +63,7 @@ function Drivers() {
   const fetchDrivers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/driver-data/drivers`
-      );
+      const response = await axios.get(`${API_BASE_URL}/driver-data/drivers`);
       setDrivers(response.data);
       setFilteredDrivers(response.data);
       setLoading(false);
@@ -129,14 +131,38 @@ function Drivers() {
     setSelectedDriverId(null);
   };
 
+  const checkLicenseExpiryNotifications = () => {
+    const today = new Date();
+    const twoMonthsFromToday = new Date();
+    twoMonthsFromToday.setMonth(today.getMonth() + 2);
+
+    const notifications = drivers.filter((driver) => {
+      const expiryDate = new Date(driver.licenseExpiryDate);
+      return expiryDate > today && expiryDate <= twoMonthsFromToday;
+    });
+
+    setLicenseExpiryNotifications(notifications);
+    setNotificationDots((prev) => ({
+      ...prev,
+      driver: notifications.length > 0,
+    }));
+  };
+
+  useEffect(() => {
+    checkLicenseExpiryNotifications();
+  }, [drivers]);
+
   const showAlert = (type, message) => {
     setAlertMessage({ type, message });
     setOpenSnackbar(true);
   };
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     // Validation Rules
     const errors = [];
     if (!formData.name.trim()) {
@@ -154,24 +180,24 @@ function Drivers() {
     if (!formData.licenseExpiryDate.trim()) {
       errors.push("License expiry date is required.");
     }
-  
+
     // Show errors if any
     if (errors.length > 0) {
       showAlert("error", errors.join(" "));
       return;
     }
-  
+
     const isDuplicate = drivers.some(
       (driver) =>
         driver.licenseNo.toLowerCase() === formData.licenseNo.toLowerCase() &&
         driver._id !== selectedDriverId // Exclude the current driver being edited
     );
-  
+
     if (isDuplicate) {
       showAlert("error", "This License Number already exists.");
       return;
     }
-  
+
     const formDataToSend = new FormData();
     formDataToSend.append("name", formData.name);
     formDataToSend.append("licenseNo", formData.licenseNo);
@@ -179,11 +205,11 @@ function Drivers() {
     formDataToSend.append("contact", formData.contact);
     formDataToSend.append("address", formData.address);
     formDataToSend.append("status", formData.status);
-  
+
     const { licenseCopy, idCopy } = formData.documents;
     if (licenseCopy) formDataToSend.append("licenseCopy", licenseCopy);
     if (idCopy) formDataToSend.append("idCopy", idCopy);
-  
+
     try {
       if (selectedDriverId) {
         await axios.put(
@@ -206,24 +232,29 @@ function Drivers() {
       showAlert("error", "An error occurred. Please try again.");
     }
   };
-  
 
-  const handleDelete = async (name,driverId) => {
+  const handleDelete = async (name, driverId) => {
     if (window.confirm("Are you sure you want to delete this driver?")) {
       try {
-
-        const jeepsWithDriver = await axios.get(`${API_BASE_URL}/jeep-data/jeeps`);
+        const jeepsWithDriver = await axios.get(
+          `${API_BASE_URL}/jeep-data/jeeps`
+        );
 
         // Find all jeeps that have the driver assigned
-        const jeepsToUpdate = jeepsWithDriver.data.filter((jeep) => jeep.assignedDriver === name);
-        
+        const jeepsToUpdate = jeepsWithDriver.data.filter(
+          (jeep) => jeep.assignedDriver === name
+        );
+
         // If there are any jeeps with the assigned driver, clear them
         if (jeepsToUpdate.length > 0) {
           // Loop through each jeep and clear the assigned driver
           for (const jeep of jeepsToUpdate) {
-            await axios.put(`${API_BASE_URL}/jeep-data/updateVehicle/${jeep.plateNumber}`, {
-              assignedDriver: null,  // Clear the assigned driver
-            });
+            await axios.put(
+              `${API_BASE_URL}/jeep-data/updateVehicle/${jeep.plateNumber}`,
+              {
+                assignedDriver: null, // Clear the assigned driver
+              }
+            );
           }
         }
 
@@ -263,7 +294,9 @@ function Drivers() {
         const date = new Date(params.row.licenseExpiryDate);
         const formattedDate = new Intl.DateTimeFormat("en-GB").format(date); // en-GB for dd/mm/yyyy format
         return (
-          <Typography sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <Typography
+            sx={{ display: "flex", alignItems: "center", height: "100%" }}
+          >
             {formattedDate}
           </Typography>
         );
@@ -288,7 +321,7 @@ function Drivers() {
           </Tooltip>
           <Tooltip title="Delete">
             <IconButton
-              onClick={() => handleDelete(params.row.name,params.row._id)}
+              onClick={() => handleDelete(params.row.name, params.row._id)}
               style={{ color: "#4CAF50" }}
             >
               <Delete />
@@ -319,6 +352,13 @@ function Drivers() {
           >
             Add Driver
           </Button>
+          <Tooltip title="Driver Notifications">
+            <IconButton>
+              <Notifications
+                color={isNotificationDotVisible ? "error" : "default"}
+              />
+            </IconButton>
+          </Tooltip>
         </Grid>
         <Grid item>
           <TextField
@@ -371,16 +411,16 @@ function Drivers() {
               required
             />
             <TextField
-                label="License Expiry Date"
-                variant="outlined"
-                type="date"
-                fullWidth
-                name="licenseExpiryDate"
-                value={formData.licenseExpiryDate}
-                onChange={handleChange}
-                required
-                InputLabelProps={{ shrink: true }}
-              />
+              label="License Expiry Date"
+              variant="outlined"
+              type="date"
+              fullWidth
+              name="licenseExpiryDate"
+              value={formData.licenseExpiryDate}
+              onChange={handleChange}
+              required
+              InputLabelProps={{ shrink: true }}
+            />
             <TextField
               fullWidth
               label="Contact"
@@ -456,15 +496,22 @@ function Drivers() {
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
-        onClose={() => setOpenSnackbar(false)}
+        onClose={handleCloseSnackbar}
       >
-        <Alert
-          onClose={() => setOpenSnackbar(false)}
-          severity={alertMessage.type}
-        >
+        <Alert onClose={handleCloseSnackbar} severity={alertMessage.type}>
           {alertMessage.message}
         </Alert>
       </Snackbar>
+
+      {/* Notifications Alert */}
+      {licenseExpiryNotifications.map((driver) => (
+        <Snackbar
+          open={true}
+          autoHideDuration={8000}
+          key={driver._id}
+          message={`Driver ${driver.name}'s license will expire soon!`}
+        />
+      ))}
     </Box>
   );
 }

@@ -14,12 +14,14 @@ import {
 import "./Sidebar.css";
 import LocationSearchingIcon from "@mui/icons-material/LocationSearching";
 import LogoutModal from "../components/LogoutModal";
-import HistoryIcon from '@mui/icons-material/History';
+import HistoryIcon from "@mui/icons-material/History";
+import { useNotification } from "./Notification";
 
 function Sidebar({ hasNotification }) {
   const [isOpen, setIsOpen] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const location = useLocation();
+  const { notificationDots } = useNotification();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -74,9 +76,24 @@ function Sidebar({ hasNotification }) {
           <li>
             <Link to="/drivers">
               <DirectionsCar />
-              <span>Drivers</span>
+              <span>
+                Driver {/* Always display the "Driver" text */}
+                {notificationDots.driver && (
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "10px",
+                      height: "10px",
+                      backgroundColor: "red",
+                      borderRadius: "50%",
+                      marginLeft: "5px",
+                    }}
+                  ></span>
+                )}
+              </span>
             </Link>
           </li>
+
           <li>
             <Link to="/jeeps">
               <Commute />
@@ -106,7 +123,7 @@ function Sidebar({ hasNotification }) {
 
       <div className="sidebar-footer">
         <ul>
-        <li>
+          <li>
             <Link to="/reports">
               <Report />
               <span>Reports</span>
@@ -128,7 +145,11 @@ function Sidebar({ hasNotification }) {
         </ul>
       </div>
 
-      <LogoutModal isOpen={showLogoutModal} onConfirm={confirmLogout} onClose={closeModal} />
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onConfirm={confirmLogout}
+        onClose={closeModal}
+      />
     </div>
   );
 }

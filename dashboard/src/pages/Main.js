@@ -171,11 +171,14 @@ function Main() {
       jeep.condition !== "maintenance" &&
       jeep.plateNumber // Ensure plateNumber exists
   );
+  
 
   const renderJeeps = (direction) =>
     jeeps
       .filter(
-        (jeep) => jeep.direction.toLowerCase() === direction.toLowerCase()
+        (jeep) =>
+          jeep.direction.toLowerCase() === direction.toLowerCase() &&
+          jeep.plateNumber // Ensure plateNumber exists
       )
       .map((jeep) => (
         <TableRow key={jeep.id}>
@@ -185,6 +188,8 @@ function Main() {
           <StyledTableCell>{jeep.eta}</StyledTableCell>
         </TableRow>
       ));
+  
+
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(

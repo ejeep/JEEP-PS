@@ -1,11 +1,20 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const travelLogController = require('../controllers/travelLogController');
+const travelLogController = require("../controllers/travelLogController");
 
-// Route to create a travel log
-router.post('/create', travelLogController.createTravelLog);
+// Route to fetch all travel logs
+router.get("/logs", travelLogController.getAllTravelLogs);
 
-// Route to get all travel logs
-router.get('/logs', travelLogController.getTravelLogs);
+// Route to create or update travel logs
+router.post("/logs", travelLogController.createOrUpdateTravelLog);
+
+// Route to fetch logs for today
+router.get("/today", travelLogController.getLogsForToday);
+
+// Route to get total travel duration for a specific arduinoID
+router.get("/duration/:arduinoID", travelLogController.getTotalDuration);
+
+// Route to get logs for a specific arduinoID within a date range (optional feature)
+// router.get("/logs/:arduinoID", travelLogController.getLogsForArduinoID);
 
 module.exports = router;

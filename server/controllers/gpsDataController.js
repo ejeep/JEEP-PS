@@ -112,6 +112,36 @@ exports.createLocation = async (req, res) => {
     const eta = calculateETA(distance, speed); // ETA in minutes
 
     // Save or update location logic (existing functionality remains)
+    let location = await Location.findOne({ arduinoID });
+    if (location) {
+      Object.assign(location, {
+        jeepLocation,
+        speed,
+        seatAvailability,
+        status,
+        direction,
+        condition,
+        timestamp: timestamp ? new Date(timestamp) : new Date(),
+      });
+      await location.save();
+      return res.status(200).json({
+        message: "Location updated successfully.",
+        data: location,
+        eta: `${eta.toFixed(2)} minutes`,
+      });
+    }
+
+    const newLocation = new Location({
+      arduinoID,
+      jeepLocation,
+      speed,
+      seatAvailability,
+      status,
+      direction,
+      condition,
+      timestamp: timestamp ? new Date(timestamp) : new Date(),
+    });
+    await newLocation.save();
 
     // Include ETA in the response
     res.status(201).json({
