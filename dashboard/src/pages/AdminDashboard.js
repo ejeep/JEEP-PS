@@ -55,7 +55,7 @@ function AdminDashboard() {
   // Fetch jeep location data from API
   const fetchJeepLocations = async () => {
     try {
-      const response = await axios.get("http://localhost:3004/gps/locations");
+      const response = await axios.get("https://jeep-ps.onrender.com/gps/locations");
       setJeepLocations(response.data); // Assuming the API returns an array of jeep location data
     } catch (error) {
       console.error("Error fetching jeep locations:", error);

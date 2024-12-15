@@ -38,7 +38,7 @@ function Reports({ setHasNotification }) {
   useEffect(() => {
     const fetchReportsData = async () => {
       try {
-        const response = await axios.get("http://localhost:3004/gps/locations");
+        const response = await axios.get("https://jeep-ps.onrender.com/gps/locations");
         setReports(response.data); // Set the fetched data into the reports state
         setLoading(false);
         setFailCount(0); // Reset the fail count on success

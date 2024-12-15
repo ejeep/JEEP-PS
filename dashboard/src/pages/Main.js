@@ -80,7 +80,7 @@ function Main() {
 
   const fetchJeepLocations = async () => {
     try {
-      const response = await axios.get("http://localhost:3004/gps/locations");
+      const response = await axios.get("https://jeep-ps.onrender.com/gps/locations");
       setJeepLocations(response.data);
       setJeeps(
         response.data.map((jeep) => ({
@@ -128,7 +128,7 @@ function Main() {
 
           try {
             const response = await axios.put(
-              "http://localhost:3004/gps/commuter-location",
+              "https://jeep-ps.onrender.com/gps/commuter-location",
               commuterPayload // Pass the correct payload
             );
 

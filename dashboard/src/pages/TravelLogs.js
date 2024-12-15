@@ -13,7 +13,7 @@ import {
   Box,
 } from "@mui/material";
 
-const API_BASE_URL = "http://localhost:3004"; // Your API base URL
+const API_BASE_URL = "https://jeep-ps.onrender.com"; // Your API base URL
 const POLLING_INTERVAL = 30000; // Polling interval in milliseconds (e.g., 30 seconds)
 
 const TravelLogs = () => {

@@ -20,7 +20,7 @@ import axios from "axios";
 import { DataGrid } from "@mui/x-data-grid"; // Import DataGrid
 import "./Jeeps.css";
 
-const API_BASE_URL = "http://localhost:3004";
+const API_BASE_URL = "https://jeep-ps.onrender.com";
 
 function Schedule() {
   const [openScheduleModal, setOpenScheduleModal] = useState(false);

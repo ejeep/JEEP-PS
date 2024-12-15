@@ -24,7 +24,7 @@ function Travel() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:3004/gps/locations");
+        const response = await axios.get("https://jeep-ps.onrender.com/gps/locations");
 
         // Set jeeps data with relevant fields (plateNumber, direction, status)
         setJeeps(

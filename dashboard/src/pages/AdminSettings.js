@@ -57,7 +57,7 @@ const AdminSettings = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:3004/users/viewUsers");
+      const response = await axios.get("https://jeep-ps.onrender.com/users/viewUsers");
       setUsers(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -105,7 +105,7 @@ const AdminSettings = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3004/users/addUser",
+        "https://jeep-ps.onrender.com/users/addUser",
         {
           email: email,
           password: hashedPassword,
@@ -144,7 +144,7 @@ const AdminSettings = () => {
   
     try {
       await axios.put(
-        `http://localhost:3004/users/editUser/${selectedUser._id}`,
+        `https://jeep-ps.onrender.com/users/editUser/${selectedUser._id}`,
         {
           email: email,
           password: hashedPassword || selectedUser.password,
@@ -162,7 +162,7 @@ const AdminSettings = () => {
   const handleDeleteUser = async () => {
     try {
       await axios.delete(
-        `http://localhost:3004/users/deleteUser/${selectedUser._id}`
+        `https://jeep-ps.onrender.com/users/deleteUser/${selectedUser._id}`
       );
       fetchUsers();
       setIsDeleteModalOpen(false);

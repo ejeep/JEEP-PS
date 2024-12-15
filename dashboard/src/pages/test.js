@@ -26,7 +26,7 @@ import { Edit, Delete, Add, Search } from "@mui/icons-material";
 import axios from "axios";
 import { DataGrid } from "@mui/x-data-grid";
 
-const API_BASE_URL = "http://localhost:3004";
+const API_BASE_URL = "https://jeep-ps.onrender.com";
 
 function Drivers() {
   const [openModal, setOpenModal] = useState(false);

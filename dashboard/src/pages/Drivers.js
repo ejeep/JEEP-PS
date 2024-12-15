@@ -27,7 +27,7 @@ import axios from "axios";
 import { DataGrid } from "@mui/x-data-grid";
 import { useNotification } from "./Notification";
 
-const API_BASE_URL = "http://localhost:3004";
+const API_BASE_URL = "https://jeep-ps.onrender.com";
 
 function Drivers() {
   const [openModal, setOpenModal] = useState(false);

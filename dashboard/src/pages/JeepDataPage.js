@@ -40,7 +40,7 @@ function GPSDataPage() {
   useEffect(() => {
     const fetchGPSData = async () => {
       try {
-        const response = await axios.get("http://localhost:3004/gps/locations");
+        const response = await axios.get("https://jeep-ps.onrender.com/gps/locations");
         setGPSData(response.data);
         setFilteredData(response.data);
         setLoading(false);
@@ -54,7 +54,7 @@ function GPSDataPage() {
     const fetchPlateNumbers = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3004/jeep-data/jeeps"
+          "https://jeep-ps.onrender.com/jeep-data/jeeps"
         );
         setPlateNumbers(response.data);
       } catch (error) {
@@ -87,7 +87,7 @@ function GPSDataPage() {
   const handleAssignJeep = async (arduinoID, plateNumber) => {
     try {
       const response = await axios.put(
-        `http://localhost:3004/gps/assign-vehicle/${arduinoID}`,
+        `https://jeep-ps.onrender.com/gps/assign-vehicle/${arduinoID}`,
         { plateNumber }
       );
 
@@ -96,7 +96,7 @@ function GPSDataPage() {
       setSnackbarOpen(true);
 
       const updatedGPSData = await axios.get(
-        "http://localhost:3004/gps/locations"
+        "https://jeep-ps.onrender.com/gps/locations"
       );
       setGPSData(updatedGPSData.data);
       setFilteredData(updatedGPSData.data);
@@ -113,7 +113,7 @@ function GPSDataPage() {
   const handleDelete = async (arduinoID) => {
     try {
       const response = await axios.delete(
-        `http://localhost:3004/gps/locations/${arduinoID}`
+        `https://jeep-ps.onrender.com/gps/locations/${arduinoID}`
       );
 
       setSnackbarMessage(response.data.message);
