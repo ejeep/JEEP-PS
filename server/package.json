@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "seed-admin": "node seedAdmin.js",
-    "start": "nodemon index.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
