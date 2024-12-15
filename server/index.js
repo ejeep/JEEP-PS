@@ -22,7 +22,7 @@ const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = ['http://localhost:3000','https://jeep-ps.vercel.app/']; // Specify allowed origins
+      const allowedOrigins = ['http://localhost:3000','https://jeep-ps.vercel.app']; // Specify allowed origins
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
