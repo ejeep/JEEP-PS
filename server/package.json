@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
   "seed-admin": "node seedAdmin.js",
-  "start": "concurrently \"node ./scripts/arduino-serial.js\" \"node index.js\"",
-  "dev": "concurrently \"node ./scripts/arduino-serial.js\" \"nodemon index.js\"",
+  "start": "concurrently \"node ./script/arduino-serial.js\" \"node index.js\"",
+  "dev": "concurrently \"node ./script/arduino-serial.js\" \"nodemon index.js\"",
   "test": "echo \"Error: no test specified\" && exit 1"
 },
 
