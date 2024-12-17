@@ -4,7 +4,6 @@ import {
   Grid,
   Button,
   Paper,
-  IconButton,
   Modal,
   TextField,
   Typography,
@@ -15,7 +14,7 @@ import {
   DialogTitle,
   Alert,
 } from "@mui/material";
-import {Delete, Search } from "@mui/icons-material";
+import { Search } from "@mui/icons-material";
 import axios from "axios";
 import { DataGrid } from "@mui/x-data-grid"; // Import DataGrid
 import "./Jeeps.css";

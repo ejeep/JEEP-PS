@@ -9,8 +9,6 @@ import Travels from "./pages/Travels";
 import Drivers from "./pages/Drivers";
 import Jeeps from "./pages/Jeeps";
 import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
-import Commuter from "./pages/Commuter";
 import About from "./pages/About"; // Import About page
 import Account from "./pages/Account"; // Import Account page
 import Schedule from "./pages/Schedule";
@@ -32,7 +30,6 @@ function App() {
 
           {/* Load Main as the default page */}
           <Route path="/" element={<Main />} />
-          <Route path="/commuter" element={<Commuter />} />
 
           {/* Routes for About and Account */}
           <Route path="/about" element={<About />} />
