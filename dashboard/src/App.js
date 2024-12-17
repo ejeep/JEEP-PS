@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Sidebar from "./pages/Sidebar";
 import Login from "./pages/Login"; // Import the Login page
 import Main from "./pages/Main"; // Import Main.js
-import Management from "./pages/Management"; // Import Management.js
 import AdminDashboard from "./pages/AdminDashboard";
 import Travels from "./pages/Travels";
 import Drivers from "./pages/Drivers";
@@ -34,9 +33,6 @@ function App() {
           {/* Routes for About and Account */}
           <Route path="/about" element={<About />} />
           <Route path="/account" element={<Account />} />
-
-          {/* Management layout */}
-          <Route path="/management/*" element={<Management />} />
 
           {/* Main layout with Sidebar and Main content for Admin */}
           <Route
