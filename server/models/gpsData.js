@@ -11,7 +11,7 @@ const LocationSchema = new mongoose.Schema({
   seatAvailability: { type: Number, required: true }, // Available seats on the jeep
   status: {
     type: String,
-    enum: ['waiting', 'en route'], // Status options: 'waiting' or 'en route'
+    enum: ['waiting', 'en route', 'arrived'], // Status options: 'waiting' or 'en route'
     required: true,
   },
   direction: {
