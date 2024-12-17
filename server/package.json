@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "seed-admin": "node seedAdmin.js",
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "seed-admin": "node seedAdmin.js",
+  "start": "concurrently \"node ./scripts/arduino-serial.js\" \"node index.js\"",
+  "dev": "concurrently \"node ./scripts/arduino-serial.js\" \"nodemon index.js\"",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
+
   "keywords": [],
   "author": "",
   "license": "ISC",
